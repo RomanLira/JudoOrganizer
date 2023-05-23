@@ -1,0 +1,17 @@
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Service\bin\Debug\net6.0\JudoOrganizer.Service.deps.json
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Service\bin\Debug\net6.0\JudoOrganizer.Service.dll
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Service\bin\Debug\net6.0\JudoOrganizer.Service.pdb
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Service\bin\Debug\net6.0\JudoOrganizer.Data.dll
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Service\bin\Debug\net6.0\JudoOrganizer.Repository.dll
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Service\bin\Debug\net6.0\JudoOrganizer.Data.pdb
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Service\bin\Debug\net6.0\JudoOrganizer.Repository.pdb
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Service\obj\Debug\net6.0\JudoOrganizer.Service.csproj.AssemblyReference.cache
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Service\obj\Debug\net6.0\JudoOrganizer.Service.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Service\obj\Debug\net6.0\JudoOrganizer.Service.AssemblyInfoInputs.cache
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Service\obj\Debug\net6.0\JudoOrganizer.Service.AssemblyInfo.cs
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Service\obj\Debug\net6.0\JudoOrganizer.Service.csproj.CoreCompileInputs.cache
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Service\obj\Debug\net6.0\JudoOrganizer.Service.csproj.CopyComplete
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Service\obj\Debug\net6.0\JudoOrganizer.Service.dll
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Service\obj\Debug\net6.0\refint\JudoOrganizer.Service.dll
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Service\obj\Debug\net6.0\JudoOrganizer.Service.pdb
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Service\obj\Debug\net6.0\ref\JudoOrganizer.Service.dll

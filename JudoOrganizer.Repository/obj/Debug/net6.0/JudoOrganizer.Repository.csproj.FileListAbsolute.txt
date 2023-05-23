@@ -1,0 +1,15 @@
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Repository\bin\Debug\net6.0\JudoOrganizer.Repository.deps.json
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Repository\bin\Debug\net6.0\JudoOrganizer.Repository.dll
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Repository\bin\Debug\net6.0\JudoOrganizer.Repository.pdb
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Repository\bin\Debug\net6.0\JudoOrganizer.Data.dll
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Repository\bin\Debug\net6.0\JudoOrganizer.Data.pdb
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Repository\obj\Debug\net6.0\JudoOrganizer.Repository.csproj.AssemblyReference.cache
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Repository\obj\Debug\net6.0\JudoOrganizer.Repository.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Repository\obj\Debug\net6.0\JudoOrganizer.Repository.AssemblyInfoInputs.cache
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Repository\obj\Debug\net6.0\JudoOrganizer.Repository.AssemblyInfo.cs
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Repository\obj\Debug\net6.0\JudoOrganizer.Repository.csproj.CoreCompileInputs.cache
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Repository\obj\Debug\net6.0\JudoOrganizer.Repository.csproj.CopyComplete
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Repository\obj\Debug\net6.0\JudoOrganizer.Repository.dll
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Repository\obj\Debug\net6.0\refint\JudoOrganizer.Repository.dll
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Repository\obj\Debug\net6.0\JudoOrganizer.Repository.pdb
+C:\Users\user\Desktop\Projects\JudoOrganizer\JudoOrganizer.Repository\obj\Debug\net6.0\ref\JudoOrganizer.Repository.dll

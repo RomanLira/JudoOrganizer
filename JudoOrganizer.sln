@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JudoOrganizer.Data", "JudoOrganizer.Data\JudoOrganizer.Data.csproj", "{524FB0A6-0B1A-4EBC-B726-10AEDD25C27E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JudoOrganizer", "JudoOrganizer\JudoOrganizer.csproj", "{09F661E4-069F-4426-80AB-A7295BC9D8B7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JudoOrganizer.Repository", "JudoOrganizer.Repository\JudoOrganizer.Repository.csproj", "{868B16CD-CA9F-4D5C-A49F-986EF8E9E423}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JudoOrganizer.Service", "JudoOrganizer.Service\JudoOrganizer.Service.csproj", "{3F29FB89-CF7F-426C-99F5-DFCF63725D3B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{524FB0A6-0B1A-4EBC-B726-10AEDD25C27E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{524FB0A6-0B1A-4EBC-B726-10AEDD25C27E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{524FB0A6-0B1A-4EBC-B726-10AEDD25C27E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{524FB0A6-0B1A-4EBC-B726-10AEDD25C27E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{09F661E4-069F-4426-80AB-A7295BC9D8B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{09F661E4-069F-4426-80AB-A7295BC9D8B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{09F661E4-069F-4426-80AB-A7295BC9D8B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{09F661E4-069F-4426-80AB-A7295BC9D8B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{868B16CD-CA9F-4D5C-A49F-986EF8E9E423}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{868B16CD-CA9F-4D5C-A49F-986EF8E9E423}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{868B16CD-CA9F-4D5C-A49F-986EF8E9E423}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{868B16CD-CA9F-4D5C-A49F-986EF8E9E423}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3F29FB89-CF7F-426C-99F5-DFCF63725D3B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F29FB89-CF7F-426C-99F5-DFCF63725D3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3F29FB89-CF7F-426C-99F5-DFCF63725D3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3F29FB89-CF7F-426C-99F5-DFCF63725D3B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
