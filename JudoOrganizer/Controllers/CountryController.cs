@@ -13,62 +13,62 @@ public class CountryController : BaseController
         
     }
 
-    [HttpGet(nameof(GetCountry))]
+    [HttpGet("Country")]
     public async Task<IActionResult> GetCountry(int id)
     {
         try
         {
             var country = await _repository.Country.GetCountryAsync(id);
-            return Ok(country);
+            return Ok(value: country);
         }
         catch (Exception ex)
         {
-            return BadRequest("Country doesn't found");
+            return NotFound("Country doesn't found");
         }
     }
 
-    [HttpGet(nameof(GetAllCountries))]
+    [HttpGet("Countries")]
     public async Task<IActionResult> GetAllCountries()
     {
         try
         {
             var countries = await _repository.Country.GetAllCountriesAsync();
-            return Ok(countries);
+            return Ok(value: countries);
         }
         catch (Exception ex)
         {
-            return BadRequest("No countries found");
+            return NotFound("No countries found");
         }
     }
     
-    [HttpGet(nameof(GetAllCitiesForCountry))]
+    [HttpGet("Country/{countryId}/Cities")]
     public async Task<IActionResult> GetAllCitiesForCountry(int countryId)
     {
         try
         {
             var cities = await _repository.City.GetAllCitiesForCountryAsync(countryId);
-            return Ok(cities);
+            return Ok(value: cities);
         }
         catch (Exception ex)
         {
-            return BadRequest("No cities found");
+            return NotFound("No cities found");
         }
     }
 
-    [HttpPost(nameof(CreateCountry))]  
+    [HttpPost("Country")]  
     public async Task<IActionResult> CreateCountry(Country country)
     {
         try
         {
             await _repository.Country.CreateCountryAsync(country);
-            return Ok("Country added");
+            return Created(Url.RouteUrl(country.Id), country);
         }
         catch (Exception ex)
         {
             return BadRequest("Country already exists!");
         }
     }  
-    [HttpPut(nameof(UpdateCountry))]  
+    [HttpPut("Country")]  
     public async Task<IActionResult> UpdateCountry(Country country)
     {
         try
@@ -78,20 +78,20 @@ public class CountryController : BaseController
         }
         catch (Exception ex)
         {
-            return BadRequest("Country doesn't found");
+            return NotFound("Country doesn't found");
         }
     }  
-    [HttpDelete(nameof(DeleteCountry))]  
+    [HttpDelete("Country")]  
     public async Task<IActionResult> DeleteCountry(int countryId)
     {
         try
         {
             await _repository.Country.DeleteCountryAsync(countryId);
-            return Ok("Country deleted");
+            return NoContent();
         }
         catch (Exception ex)
         {
-            return BadRequest("Country doesn't found");
+            return NotFound("Country doesn't found");
         }
     }  
 }

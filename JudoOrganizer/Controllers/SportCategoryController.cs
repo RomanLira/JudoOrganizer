@@ -13,48 +13,48 @@ public class SportCategoryController : BaseController
         
     }
 
-    [HttpGet(nameof(GetSportCategory))]
+    [HttpGet("SportCategory")]
     public async Task<IActionResult> GetSportCategory(int id)
     {
         try
         {
             var sportCategory = await _repository.SportCategory.GetSportCategoryAsync(id);
-            return Ok(sportCategory);
+            return Ok(value: sportCategory);
         }
         catch (Exception ex)
         {
-            return BadRequest("Sport category doesn't found");
+            return NotFound("Sport category doesn't found");
         }
     }
 
-    [HttpGet(nameof(GetAllSportCategories))]
+    [HttpGet("SportCategories")]
     public async Task<IActionResult> GetAllSportCategories()
     {
         try
         {
             var sportCategories = await _repository.SportCategory.GetAllSportCategoriesAsync();
-            return Ok(sportCategories);
+            return Ok(value: sportCategories);
         }
         catch (Exception ex)
         {
-            return BadRequest("No Sport categories found");
+            return NotFound("No Sport categories found");
         }
     }
 
-    [HttpPost(nameof(CreateSportCategory))]  
+    [HttpPost("SportCategory")]  
     public async Task<IActionResult> CreateSportCategory(SportCategory sportCategory)
     {
         try
         {
             await _repository.SportCategory.CreateSportCategoryAsync(sportCategory);
-            return Ok("Sport category added");
+            return Created(Url.RouteUrl(sportCategory.Id), sportCategory);
         }
         catch (Exception ex)
         {
             return BadRequest("Sport category already exists!");
         }
     }  
-    [HttpPut(nameof(UpdateSportCategory))]  
+    [HttpPut("SportCategory")]  
     public async Task<IActionResult> UpdateSportCategory(SportCategory sportCategory)
     {
         try
@@ -64,20 +64,20 @@ public class SportCategoryController : BaseController
         }
         catch (Exception ex)
         {
-            return BadRequest("Sport category doesn't found");
+            return NotFound("Sport category doesn't found");
         }
     }  
-    [HttpDelete(nameof(DeleteSportCategory))]  
+    [HttpDelete("SportCategory")]  
     public async Task<IActionResult> DeleteSportCategory(int sportCategoryId)
     {
         try
         {
             await _repository.SportCategory.DeleteSportCategoryAsync(sportCategoryId);
-            return Ok("Sport category deleted");
+            return NoContent();
         }
         catch (Exception ex)
         {
-            return BadRequest("Sport category doesn't found");
+            return NotFound("Sport category doesn't found");
         }
     }  
 }

@@ -13,62 +13,62 @@ public class CoachController : BaseController
         
     }
 
-    [HttpGet(nameof(GetCoach))]
+    [HttpGet("Coach")]
     public async Task<IActionResult> GetCoach(int id)
     {
         try
         {
             var coach = await _repository.Coach.GetCoachAsync(id);
-            return Ok(coach);
+            return Ok(value: coach);
         }
         catch (Exception ex)
         {
-            return BadRequest("Coach doesn't found");
+            return NotFound("Coach doesn't found");
         }
     }
 
-    [HttpGet(nameof(GetAllCoaches))]
+    [HttpGet("Coaches")]
     public async Task<IActionResult> GetAllCoaches()
     {
         try
         {
             var coaches = await _repository.Coach.GetAllCoachesAsync();
-            return Ok(coaches);
+            return Ok(value: coaches);
         }
         catch (Exception ex)
         {
-            return BadRequest("No coaches found");
+            return NotFound("No coaches found");
         }
     }
     
-    [HttpGet(nameof(GetAllSportsmenForCoach))]
+    [HttpGet("Coach/{coachId}/Sportsmen")]
     public async Task<IActionResult> GetAllSportsmenForCoach(int coachId)
     {
         try
         {
             var sportsmen = await _repository.Sportsman.GetAllSportsmenForCoachAsync(coachId);
-            return Ok(sportsmen);
+            return Ok(value: sportsmen);
         }
         catch (Exception ex)
         {
-            return BadRequest("No sportsmen found");
+            return NotFound("No sportsmen found");
         }
     }
 
-    [HttpPost(nameof(CreateCoach))]  
+    [HttpPost("Coach")]  
     public async Task<IActionResult> CreateCoach(Coach coach)
     {
         try
         {
             await _repository.Coach.CreateCoachAsync(coach);
-            return Ok("Coach added");
+            return Created(Url.RouteUrl(coach.Id), coach);
         }
         catch (Exception ex)
         {
             return BadRequest("Coach already exists!");
         }
     }  
-    [HttpPut(nameof(UpdateCoach))]  
+    [HttpPut("Coach")]  
     public async Task<IActionResult> UpdateCoach(Coach coach)
     {
         try
@@ -78,20 +78,20 @@ public class CoachController : BaseController
         }
         catch (Exception ex)
         {
-            return BadRequest("Coach doesn't found");
+            return NotFound("Coach doesn't found");
         }
     }  
-    [HttpDelete(nameof(DeleteCoach))]  
+    [HttpDelete("Coach")]  
     public async Task<IActionResult> DeleteCoach(int coachId)
     {
         try
         {
             await _repository.Coach.DeleteCoachAsync(coachId);
-            return Ok("Coach deleted");
+            return NoContent();
         }
         catch (Exception ex)
         {
-            return BadRequest("Coach doesn't found");
+            return NotFound("Coach doesn't found");
         }
     }  
 }

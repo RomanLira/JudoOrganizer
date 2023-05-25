@@ -13,48 +13,48 @@ public class MatchController : BaseController
         
     }
 
-    [HttpGet(nameof(GetMatch))]
+    [HttpGet("Match")]
     public async Task<IActionResult> GetMatch(int id)
     {
         try
         {
             var match = await _repository.Match.GetMatchAsync(id);
-            return Ok(match);
+            return Ok(value: match);
         }
         catch (Exception ex)
         {
-            return BadRequest("Match doesn't found");
+            return NotFound("Match doesn't found");
         }
     }
 
-    [HttpGet(nameof(GetAllMatches))]
+    [HttpGet("Matches")]
     public async Task<IActionResult> GetAllMatches()
     {
         try
         {
             var matches = await _repository.Match.GetAllMatchesAsync();
-            return Ok(matches);
+            return Ok(value: matches);
         }
         catch (Exception ex)
         {
-            return BadRequest("No matches found");
+            return NotFound("No matches found");
         }
     }
 
-    [HttpPost(nameof(CreateMatch))]  
+    [HttpPost("Match")]  
     public async Task<IActionResult> CreateMatch(Match match)
     {
         try
         {
             await _repository.Match.CreateMatchAsync(match);
-            return Ok("Match added");
+            return Created(Url.RouteUrl(match.Id), match);
         }
         catch (Exception ex)
         {
             return BadRequest("Match already exists!");
         }
     }  
-    [HttpPut(nameof(UpdateMatch))]  
+    [HttpPut("Match")]  
     public async Task<IActionResult> UpdateMatch(Match match)
     {
         try
@@ -64,20 +64,20 @@ public class MatchController : BaseController
         }
         catch (Exception ex)
         {
-            return BadRequest("Match doesn't found");
+            return NotFound("Match doesn't found");
         }
     }  
-    [HttpDelete(nameof(DeleteMatch))]  
+    [HttpDelete("Match")]  
     public async Task<IActionResult> DeleteMatch(int matchId)
     {
         try
         {
             await _repository.Match.DeleteMatchAsync(matchId);
-            return Ok("Match deleted");
+            return NoContent();
         }
         catch (Exception ex)
         {
-            return BadRequest("Match doesn't found");
+            return NotFound("Match doesn't found");
         }
     }  
 }

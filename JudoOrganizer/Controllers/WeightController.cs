@@ -13,48 +13,48 @@ public class WeightController : BaseController
         
     }
 
-    [HttpGet(nameof(GetWeight))]
+    [HttpGet("Weight")]
     public async Task<IActionResult> GetWeight(int id)
     {
         try
         {
             var weight = await _repository.Weight.GetWeightAsync(id);
-            return Ok(weight);
+            return Ok(value: weight);
         }
         catch (Exception ex)
         {
-            return BadRequest("Weight doesn't found");
+            return NotFound("Weight doesn't found");
         }
     }
 
-    [HttpGet(nameof(GetAllWeights))]
+    [HttpGet("Weights")]
     public async Task<IActionResult> GetAllWeights()
     {
         try
         {
             var weights = await _repository.Weight.GetAllWeightsAsync();
-            return Ok(weights);
+            return Ok(value: weights);
         }
         catch (Exception ex)
         {
-            return BadRequest("No weights found");
+            return NotFound("No weights found");
         }
     }
 
-    [HttpPost(nameof(CreateWeight))]  
+    [HttpPost("Weight")]  
     public async Task<IActionResult> CreateWeight(Weight weight)
     {
         try
         {
             await _repository.Weight.CreateWeightAsync(weight);
-            return Ok("Weight added");
+            return Created(Url.RouteUrl(weight.Id), weight);
         }
         catch (Exception ex)
         {
             return BadRequest("Weight already exists!");
         }
     }  
-    [HttpPut(nameof(UpdateWeight))]  
+    [HttpPut("Weight")]  
     public async Task<IActionResult> UpdateWeight(Weight weight)
     {
         try
@@ -64,20 +64,20 @@ public class WeightController : BaseController
         }
         catch (Exception ex)
         {
-            return BadRequest("Weight doesn't found");
+            return NotFound("Weight doesn't found");
         }
     }  
-    [HttpDelete(nameof(DeleteWeight))]  
+    [HttpDelete("Weight")]  
     public async Task<IActionResult> DeleteWeight(int weightId)
     {
         try
         {
             await _repository.Weight.DeleteWeightAsync(weightId);
-            return Ok("Weight deleted");
+            return NoContent();
         }
         catch (Exception ex)
         {
-            return BadRequest("Weight doesn't found");
+            return NotFound("Weight doesn't found");
         }
     }  
 }

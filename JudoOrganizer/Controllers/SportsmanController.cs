@@ -13,76 +13,76 @@ public class SportsmanController : BaseController
         
     }
 
-    [HttpGet(nameof(GetSportsman))]
+    [HttpGet("Sportsman")]
     public async Task<IActionResult> GetSportsman(int id)
     {
         try
         {
             var sportsman = await _repository.Sportsman.GetSportsmanAsync(id);
-            return Ok(sportsman);
+            return Ok(value: sportsman);
         }
         catch (Exception ex)
         {
-            return BadRequest("Sportsman doesn't found");
+            return NotFound("Sportsman doesn't found");
         }
     }
 
-    [HttpGet(nameof(GetAllSportsmen))]
+    [HttpGet("Sportsmen")]
     public async Task<IActionResult> GetAllSportsmen()
     {
         try
         {
             var sportsmen = await _repository.Sportsman.GetAllSportsmenAsync();
-            return Ok(sportsmen);
+            return Ok(value: sportsmen);
         }
         catch (Exception ex)
         {
-            return BadRequest("No sportsmen found");
+            return NotFound("No sportsmen found");
         }
     }
     
-    [HttpGet(nameof(GetAllMatchesForSportsman))]
+    [HttpGet("Sportsman/{sportsmanId}/Matches")]
     public async Task<IActionResult> GetAllMatchesForSportsman(int sportsmanId)
     {
         try
         {
             var matches = await _repository.Match.GetAllMatchesForSportsmanAsync(sportsmanId);
-            return Ok(matches);
+            return Ok(value: matches);
         }
         catch (Exception ex)
         {
-            return BadRequest("No matches found");
+            return NotFound("No matches found");
         }
     }
     
-    [HttpGet(nameof(GetAllMatchResultsForSportsman))]
+    [HttpGet("Sportsman/{sportsmanId}/MatchResults")]
     public async Task<IActionResult> GetAllMatchResultsForSportsman(int sportsmanId)
     {
         try
         {
             var matchResults = await _repository.MatchResult.GetAllMatchResultsForSportsmanAsync(sportsmanId);
-            return Ok(matchResults);
+            return Ok(value: matchResults);
         }
         catch (Exception ex)
         {
-            return BadRequest("No match results found");
+            return NotFound("No match results found");
         }
     }
 
-    [HttpPost(nameof(CreateSportsman))]  
+    [HttpPost("Sportsman")]  
     public async Task<IActionResult> CreateSportsman(Sportsman sportsman)
     {
         try
         {
             await _repository.Sportsman.CreateSportsmanAsync(sportsman);
-            return Ok("Sportsman added");
+            return Created(Url.RouteUrl(sportsman.Id), sportsman);
         }
         catch (Exception ex)
         {
             return BadRequest("Sportsman already exists!");
         }
     }  
-    [HttpPut(nameof(UpdateSportsman))]  
+    [HttpPut("Sportsman")]  
     public async Task<IActionResult> UpdateSportsman(Sportsman sportsman)
     {
         try
@@ -92,20 +92,20 @@ public class SportsmanController : BaseController
         }
         catch (Exception ex)
         {
-            return BadRequest("Sportsman doesn't found");
+            return NotFound("Sportsman doesn't found");
         }
     }  
-    [HttpDelete(nameof(DeleteSportsman))]  
+    [HttpDelete("Sportsman")]  
     public async Task<IActionResult> DeleteSportsman(int sportsmanId)
     {
         try
         {
             await _repository.Sportsman.DeleteSportsmanAsync(sportsmanId);
-            return Ok("Sportsman deleted");
+            return NoContent();
         }
         catch (Exception ex)
         {
-            return BadRequest("Sportsman doesn't found");
+            return NotFound("Sportsman doesn't found");
         }
     }  
 }

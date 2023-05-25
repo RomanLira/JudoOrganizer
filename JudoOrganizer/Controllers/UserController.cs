@@ -16,48 +16,48 @@ public class UserController : BaseController
         
     }
 
-    [HttpGet(nameof(GetUser))]
+    [HttpGet("User")]
     public async Task<IActionResult> GetUser(int id)
     {
         try
         {
             var user = await _repository.User.GetUserAsync(id);
-            return Ok(user);
+            return Ok(value: user);
         }
         catch (Exception ex)
         {
-            return BadRequest("User doesn't found");
+            return NotFound("User doesn't found");
         }
     }
 
-    [HttpGet(nameof(GetAllUsers))]
+    [HttpGet("Users")]
     public async Task<IActionResult> GetAllUsers()
     {
         try
         {
             var users = await _repository.User.GetAllUsersAsync();
-            return Ok(users);
+            return Ok(value: users);
         }
         catch (Exception ex)
         {
-            return BadRequest("No users found");
+            return NotFound("No users found");
         }
     }
 
-    [HttpPost(nameof(CreateUser))]  
+    [HttpPost("User")]  
     public async Task<IActionResult> CreateUser(User user)
     {
         try
         {
             await _repository.User.CreateUserAsync(user);
-            return Ok("User added");
+            return Created(Url.RouteUrl(user.Id), user);
         }
         catch (Exception ex)
         {
             return BadRequest("User already exists!");
         }
     }  
-    [HttpPut(nameof(UpdateUser))]  
+    [HttpPut("User")]  
     public async Task<IActionResult> UpdateUser(User user)
     {
         try
@@ -67,21 +67,21 @@ public class UserController : BaseController
         }
         catch (Exception ex)
         {
-            return BadRequest("User doesn't found");
+            return NotFound("User doesn't found");
         }
     }  
     
-    [HttpDelete(nameof(DeleteUser))]  
+    [HttpDelete("User")]  
     public async Task<IActionResult> DeleteUser(int userId)
     {
         try
         {
             await _repository.User.DeleteUserAsync(userId);
-            return Ok("User deleted");
+            return NoContent();
         }
         catch (Exception ex)
         {
-           return BadRequest("User doesn't found");
+           return NotFound("User doesn't found");
         }
     }  
 }

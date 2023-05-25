@@ -13,76 +13,76 @@ public class ClubController : BaseController
         
     }
 
-    [HttpGet(nameof(GetClub))]
+    [HttpGet("Club")]
     public async Task<IActionResult> GetClub(int id)
     {
         try
         {
             var club = await _repository.Club.GetClubAsync(id);
-            return Ok(club);
+            return Ok(value: club);
         }
         catch (Exception ex)
         {
-            return BadRequest("Club doesn't found");
+            return NotFound("Club doesn't found");
         }
     }
 
-    [HttpGet(nameof(GetAllClubs))]
+    [HttpGet("Clubs")]
     public async Task<IActionResult> GetAllClubs()
     {
         try
         {
             var clubs = await _repository.Club.GetAllClubsAsync();
-            return Ok(clubs);
+            return Ok(value: clubs);
         }
         catch (Exception ex)
         {
-            return BadRequest("No clubs found");
+            return NotFound("No clubs found");
         }
     }
     
-    [HttpGet(nameof(GetAllCoachesForClub))]
+    [HttpGet("Club/{clubId}/Coaches")]
     public async Task<IActionResult> GetAllCoachesForClub(int clubId)
     {
         try
         {
             var coaches = await _repository.Coach.GetAllCoachesForClubAsync(clubId);
-            return Ok(coaches);
+            return Ok(value: coaches);
         }
         catch (Exception ex)
         {
-            return BadRequest("No coaches found");
+            return NotFound("No coaches found");
         }
     }
     
-    [HttpGet(nameof(GetAllSportsmenForClub))]
+    [HttpGet("Clubs/{clubId}/Sportsmen")]
     public async Task<IActionResult> GetAllSportsmenForClub(int clubId)
     {
         try
         {
             var sportsmen = await _repository.Sportsman.GetAllSportsmenForClubAsync(clubId);
-            return Ok(sportsmen);
+            return Ok(value: sportsmen);
         }
         catch (Exception ex)
         {
-            return BadRequest("No sportsmen found");
+            return NotFound("No sportsmen found");
         }
     }
 
-    [HttpPost(nameof(CreateClub))]  
+    [HttpPost("Club")]  
     public async Task<IActionResult> CreateClub(Club club)
     {
         try
         {
             await _repository.Club.CreateClubAsync(club);
-            return Ok("Club added");
+            return Created(Url.RouteUrl(club.Id), club);
         }
         catch (Exception ex)
         {
             return BadRequest("Club already exists!");
         }
     }  
-    [HttpPut(nameof(UpdateClub))]  
+    [HttpPut("Club")]  
     public async Task<IActionResult> UpdateClub(Club club)
     {
         try
@@ -92,20 +92,20 @@ public class ClubController : BaseController
         }
         catch (Exception ex)
         {
-            return BadRequest("Club doesn't found");
+            return NotFound("Club doesn't found");
         }
     }  
-    [HttpDelete(nameof(DeleteClub))]  
+    [HttpDelete("Club")]  
     public async Task<IActionResult> DeleteClub(int clubId)
     {
         try
         {
             await _repository.Club.DeleteClubAsync(clubId);
-            return Ok("Club deleted");
+            return NoContent();
         }
         catch (Exception ex)
         {
-            return BadRequest("Club doesn't found");
+            return NotFound("Club doesn't found");
         }
     }  
 }

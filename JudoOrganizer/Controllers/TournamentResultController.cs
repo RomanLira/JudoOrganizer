@@ -13,62 +13,62 @@ public class TournamentResultController : BaseController
         
     }
 
-    [HttpGet(nameof(GetTournamentResult))]
+    [HttpGet("TournamentResult")]
     public async Task<IActionResult> GetTournamentResult(int id)
     {
         try
         {
             var tournamentResult = await _repository.TournamentResult.GetTournamentResultAsync(id);
-            return Ok(tournamentResult);
+            return Ok(value: tournamentResult);
         }
         catch (Exception ex)
         {
-            return BadRequest("Tournament result doesn't found");
+            return NotFound("Tournament result doesn't found");
         }
     }
 
-    [HttpGet(nameof(GetAllTournamentResults))]
+    [HttpGet("TournamentResults")]
     public async Task<IActionResult> GetAllTournamentResults()
     {
         try
         {
             var tournamentResults = await _repository.TournamentResult.GetAllTournamentResultsAsync();
-            return Ok(tournamentResults);
+            return Ok(value: tournamentResults);
         }
         catch (Exception ex)
         {
-            return BadRequest("No tournament results found");
+            return NotFound("No tournament results found");
         }
     }
     
-    [HttpGet(nameof(GetAllMatchResultsForTournamentResult))]
+    [HttpGet("TournamentResult/{tournamentResultId}/MatchResults")]
     public async Task<IActionResult> GetAllMatchResultsForTournamentResult(int tournamentResultId)
     {
         try
         {
             var matchResults = await _repository.MatchResult.GetAllMatchResultsForTournamentResultAsync(tournamentResultId);
-            return Ok(matchResults);
+            return Ok(value: matchResults);
         }
         catch (Exception ex)
         {
-            return BadRequest("No match results found");
+            return NotFound("No match results found");
         }
     }
 
-    [HttpPost(nameof(CreateTournamentResult))]  
+    [HttpPost("TournamentResult")]  
     public async Task<IActionResult> CreateTournamentResult(TournamentResult tournamentResult)
     {
         try
         {
             await _repository.TournamentResult.CreateTournamentResultAsync(tournamentResult);
-            return Ok("Tournament result added");
+            return Created(Url.RouteUrl(tournamentResult.Id), tournamentResult);
         }
         catch (Exception ex)
         {
             return BadRequest("Tournament result already exists!");
         }
     }  
-    [HttpPut(nameof(UpdateTournamentResult))]  
+    [HttpPut("TournamentResult")]  
     public async Task<IActionResult> UpdateTournamentResult(TournamentResult tournamentResult)
     {
         try
@@ -78,20 +78,20 @@ public class TournamentResultController : BaseController
         }
         catch (Exception ex)
         {
-            return BadRequest("Tournament result doesn't found");
+            return NotFound("Tournament result doesn't found");
         }
     }  
-    [HttpDelete(nameof(DeleteTournamentResult))]  
+    [HttpDelete("TournamentResult")]  
     public async Task<IActionResult> DeleteTournamentResult(int tournamentResultId)
     {
         try
         {
             await _repository.TournamentResult.DeleteTournamentResultAsync(tournamentResultId);
-            return Ok("Tournament result deleted");
+            return NoContent();
         }
         catch (Exception ex)
         {
-            return BadRequest("Tournament result doesn't found");
+            return NotFound("Tournament result doesn't found");
         }
     }  
 }

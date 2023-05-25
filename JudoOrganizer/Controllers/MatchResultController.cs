@@ -13,48 +13,48 @@ public class MatchResultController : BaseController
         
     }
 
-    [HttpGet(nameof(GetMatchResult))]
+    [HttpGet("MatchResult")]
     public async Task<IActionResult> GetMatchResult(int id)
     {
         try
         {
             var matchResult = await _repository.MatchResult.GetMatchResultAsync(id);
-            return Ok(matchResult);
+            return Ok(value: matchResult);
         }
         catch (Exception ex)
         {
-            return BadRequest("Match result doesn't found");
+            return NotFound("Match result doesn't found");
         }
     }
 
-    [HttpGet(nameof(GetAllMatchResults))]
+    [HttpGet("MatchResults")]
     public async Task<IActionResult> GetAllMatchResults()
     {
         try
         {
             var matchResults = await _repository.MatchResult.GetAllMatchResultsAsync();
-            return Ok(matchResults);
+            return Ok(value: matchResults);
         }
         catch (Exception ex)
         {
-            return BadRequest("No match results found");
+            return NotFound("No match results found");
         }
     }
 
-    [HttpPost(nameof(CreateMatchResult))]  
+    [HttpPost("MatchResult")]  
     public async Task<IActionResult> CreateMatchResult(MatchResult matchResult)
     {
         try
         {
             await _repository.MatchResult.CreateMatchResultAsync(matchResult);
-            return Ok("Match result added");
+            return Created(Url.RouteUrl(matchResult.Id), matchResult);
         }
         catch (Exception ex)
         {
             return BadRequest("Match result already exists!");
         }
     }  
-    [HttpPut(nameof(UpdateMatchResult))]  
+    [HttpPut("MatchResult")]  
     public async Task<IActionResult> UpdateMatchResult(MatchResult matchResult)
     {
         try
@@ -64,20 +64,20 @@ public class MatchResultController : BaseController
         }
         catch (Exception ex)
         {
-            return BadRequest("Match result doesn't found");
+            return NotFound("Match result doesn't found");
         }
     }  
-    [HttpDelete(nameof(DeleteMatchResult))]  
+    [HttpDelete("MatchResult")]  
     public async Task<IActionResult> DeleteMatchResult(int matchResultId)
     {
         try
         {
             await _repository.MatchResult.DeleteMatchResultAsync(matchResultId);
-            return Ok("Match result deleted");
+            return NoContent();
         }
         catch (Exception ex)
         {
-            return BadRequest("Match result doesn't found");
+            return NotFound("Match result doesn't found");
         }
     }  
 }

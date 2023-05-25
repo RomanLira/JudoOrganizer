@@ -18,62 +18,62 @@ public class CityController : BaseController
         
     }
 
-    [HttpGet(nameof(GetCity))]
+    [HttpGet("City")]
     public async Task<IActionResult> GetCity(int id)
     {
         try
         {
-            var city = await _repository.City.GetCityAsync(id);
-            return Ok(city);
+            var city = await _repository.City.GetCityAsync(id: id);
+            return Ok(value: city);
         }
         catch (Exception ex)
         {
-            return BadRequest("City doesn't found");
+            return NotFound("City doesn't found");
         }
     }
 
-    [HttpGet(nameof(GetAllCities))]
+    [HttpGet("Cities")]
     public async Task<IActionResult> GetAllCities()
     {
         try
         {
             var cities = await _repository.City.GetAllCitiesAsync();
-            return Ok(cities);
+            return Ok(value: cities);
         }
         catch (Exception ex)
         {
-            return BadRequest("No cities found");
+            return NotFound("No cities found");
         }
     }
     
-    [HttpGet(nameof(GetAllClubsForCity))]
+    [HttpGet("City/{cityId}/Clubs")]
     public async Task<IActionResult> GetAllClubsForCity(int cityId)
     {
         try
         {
             var clubs = await _repository.Club.GetAllClubsForCityAsync(cityId);
-            return Ok(clubs);
+            return Ok(value: clubs);
         }
         catch (Exception ex)
         {
-            return BadRequest("No clubs found");
+            return NotFound("No clubs found");
         }
     }
 
-    [HttpPost(nameof(CreateCity))]  
+    [HttpPost("City")]  
     public async Task<IActionResult> CreateCity(City city)
     {
         try
         {
             await _repository.City.CreateCityAsync(city);
-            return Ok("City added");
+            return Created(Url.RouteUrl(city.Id), city);
         }
         catch (Exception ex)
         {
             return BadRequest("City already exists!");
         }
     }  
-    [HttpPut(nameof(UpdateCity))]  
+    [HttpPut("City")]  
     public async Task<IActionResult> UpdateCity(City city)
     {
         try
@@ -83,20 +83,20 @@ public class CityController : BaseController
         }
         catch (Exception ex)
         {
-            return BadRequest("City doesn't found");
+            return NotFound("City doesn't found");
         }
     }  
-    [HttpDelete(nameof(DeleteCity))]  
+    [HttpDelete("City")]  
     public async Task<IActionResult> DeleteCity(int cityId)
     {
         try
         {
             await _repository.City.DeleteCityAsync(cityId);
-            return Ok("City deleted");
+            return NoContent();
         }
         catch (Exception ex)
         {
-            return BadRequest("City doesn't found");
+            return NotFound("City doesn't found");
         }
     }  
 }

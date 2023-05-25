@@ -13,62 +13,62 @@ public class TournamentController : BaseController
         
     }
 
-    [HttpGet(nameof(GetTournament))]
+    [HttpGet("Tournament")]
     public async Task<IActionResult> GetTournament(int id)
     {
         try
         {
             var tournament = await _repository.Tournament.GetTournamentAsync(id);
-            return Ok(tournament);
+            return Ok(value: tournament);
         }
         catch (Exception ex)
         {
-            return BadRequest("Tournament doesn't found");
+            return NotFound("Tournament doesn't found");
         }
     }
 
-    [HttpGet(nameof(GetAllTournaments))]
+    [HttpGet("Tournaments")]
     public async Task<IActionResult> GetAllTournaments()
     {
         try
         {
             var tournaments = await _repository.Tournament.GetAllTournamentsAsync();
-            return Ok(tournaments);
+            return Ok(value: tournaments);
         }
         catch (Exception ex)
         {
-            return BadRequest("No tournaments found");
+            return NotFound("No tournaments found");
         }
     }
     
-    [HttpGet(nameof(GetAllSportCategoriesForTournament))]
+    [HttpGet("Tournament/{tournamentId}/SportCategories")]
     public async Task<IActionResult> GetAllSportCategoriesForTournament(int tournamentId)
     {
         try
         {
             var sportCategories = await _repository.SportCategory.GetAllSportCategoriesForTournamentAsync(tournamentId);
-            return Ok(sportCategories);
+            return Ok(value: sportCategories);
         }
         catch (Exception ex)
         {
-            return BadRequest("No sport categories found");
+            return NotFound("No sport categories found");
         }
     }
 
-    [HttpPost(nameof(CreateTournament))]  
+    [HttpPost("Tournament")]  
     public async Task<IActionResult> CreateTournament(Tournament tournament)
     {
         try
         {
             await _repository.Tournament.CreateTournamentAsync(tournament);
-            return Ok("Tournament added");
+            return Created(Url.RouteUrl(tournament.Id), tournament);
         }
         catch (Exception ex)
         {
             return BadRequest("Tournament already exists!");
         }
     }  
-    [HttpPut(nameof(UpdateTournament))]  
+    [HttpPut("Tournament")]  
     public async Task<IActionResult> UpdateTournament(Tournament tournament)
     {
         try
@@ -78,20 +78,20 @@ public class TournamentController : BaseController
         }
         catch (Exception ex)
         {
-            return BadRequest("Tournament doesn't found");
+            return NotFound("Tournament doesn't found");
         }
     }  
-    [HttpDelete(nameof(DeleteTournament))]  
+    [HttpDelete("Tournament")]  
     public async Task<IActionResult> DeleteTournament(int tournamentId)
     {
         try
         {
             await _repository.Tournament.DeleteTournamentAsync(tournamentId);
-            return Ok("Tournament deleted");
+            return NoContent();
         }
         catch (Exception ex)
         {
-            return BadRequest("Tournament doesn't found");
+            return NotFound("Tournament doesn't found");
         }
     }  
 }
