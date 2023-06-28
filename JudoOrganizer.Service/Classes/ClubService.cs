@@ -3,6 +3,7 @@ using JudoOrganizer.Data;
 using JudoOrganizer.Data.Models;
 using JudoOrganizer.Repository.Classes;
 using JudoOrganizer.Service.Interfaces;
+using JudoOrganizer.Service.Classes;
 using Microsoft.EntityFrameworkCore;
 
 namespace JudoOrganizer.Service.Classes;
@@ -33,15 +34,32 @@ public class ClubService : Repository<Club>, IClubService
     public async Task UpdateClubAsync(int id, Club club)
     {
         var changedClub = await GetClubAsync(id);
-        await DeleteClubAsync(changedClub.Id);
-        await CreateClubAsync(club);
-        await SaveChangesAsync();
+        if (changedClub != null)
+        {
+            changedClub.Name = club.Name;
+            changedClub.Address = club.Address;
+            changedClub.CityId = club.CityId;
+
+            await SaveChangesAsync();
+        }
+        else
+        {
+            throw new Exception("Клуб не найден.");
+        }
     }
+
 
     public async Task DeleteClubAsync(int id)
     {
         var club = await GetClubAsync(id);
-        await DeleteAsync(club);
-        await SaveChangesAsync();
+        if (club != null)
+        {
+            await DeleteAsync(club);
+            await SaveChangesAsync();
+        }
+        else
+        {
+            throw new Exception("Клуб не найден.");
+        }
     }
 }

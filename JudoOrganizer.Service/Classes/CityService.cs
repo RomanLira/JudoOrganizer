@@ -33,15 +33,31 @@ public class CityService : Repository<City>, ICityService
     public async Task UpdateCityAsync(int id, City city)
     {
         var changedCity = await GetCityAsync(id);
-        await DeleteCityAsync(changedCity.Id);
-        await CreateCityAsync(city);
-        await SaveChangesAsync();
+        if (changedCity != null)
+        {
+            changedCity.Name = city.Name;
+            changedCity.CountryId = city.CountryId;
+
+            await SaveChangesAsync();
+        }
+        else
+        {
+            throw new Exception("Город не найден.");
+        }
     }
+
 
     public async Task DeleteCityAsync(int id)
     {
         var city = await GetCityAsync(id);
-        await DeleteAsync(city);
-        await SaveChangesAsync();
+        if (city != null)
+        {
+            await DeleteAsync(city);
+            await SaveChangesAsync();
+        }
+        else
+        {
+            throw new Exception("Город не найден.");
+        }
     }
 }

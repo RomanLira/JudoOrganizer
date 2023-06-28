@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using JudoOrganizer.Data;
+using JudoOrganizer.Data.Enums;
 using JudoOrganizer.Data.Models;
 using JudoOrganizer.Repository.Classes;
 using JudoOrganizer.Service.Interfaces;
@@ -15,7 +16,12 @@ public class TournamentService : Repository<Tournament>, ITournamentService
     }
 
     public async Task<IEnumerable<Tournament>> GetAllTournamentsAsync() =>
-        await GetAllAsync().Result.OrderBy(tournament => tournament.Name).ToListAsync();
+        await GetAllAsync().Result.OrderByDescending(tournament => tournament.Date).ToListAsync();
+
+    public async Task<IEnumerable<Tournament>> GetAllTournamentsWithOpenedRegistrationAsync() =>
+        await GetAllAsync().Result.Where(tournament => tournament.RegistrationStatus.Equals(RegistrationStatus.Opened))
+            .OrderBy(tournament => tournament.Name)
+            .ToListAsync();
 
     public async Task<Tournament?> GetTournamentAsync(int id) =>
         await GetAsync(tournament => tournament.Id.Equals(id)).Result.SingleOrDefaultAsync();
@@ -29,15 +35,48 @@ public class TournamentService : Repository<Tournament>, ITournamentService
     public async Task UpdateTournamentAsync(int id, Tournament tournament)
     {
         var changedTournament = await GetTournamentAsync(id);
-        await DeleteTournamentAsync(changedTournament.Id);
-        await CreateTournamentAsync(tournament);
-        await SaveChangesAsync();
+        if (changedTournament != null)
+        {
+            changedTournament.Name = tournament.Name;
+            changedTournament.Organizer = tournament.Organizer;
+            changedTournament.Date = tournament.Date;
+            changedTournament.Place = tournament.Place;
+            changedTournament.RegistrationStatus = tournament.RegistrationStatus;
+
+            await SaveChangesAsync();
+        }
+        else
+        {
+            throw new Exception("Турнир не найден.");
+        }
     }
+    
+    public async Task UpdateTournamentRegistrationStatusAsync(int id)
+    {
+        var changedTournament = await GetTournamentAsync(id);
+        if (changedTournament != null)
+        {
+            changedTournament.RegistrationStatus = RegistrationStatus.Closed;
+            await SaveChangesAsync();
+        }
+        else
+        {
+            throw new Exception("Турнир не найден.");
+        }
+    }
+
 
     public async Task DeleteTournamentAsync(int id)
     {
         var tournament = await GetTournamentAsync(id);
-        await DeleteAsync(tournament);
-        await SaveChangesAsync();
+        if (tournament != null)
+        {
+            await DeleteAsync(tournament);
+            await SaveChangesAsync();
+        }
+        else
+        {
+            throw new Exception("Турнир не найден.");
+        }
     }
 }

@@ -7,21 +7,21 @@ public class WeighingMap
 {
     public WeighingMap(EntityTypeBuilder<Weighing> builder)
     {
-        builder.HasKey(weighing => new {weighing.SportsmanId, weighing.TournamentId, weighing.SportCategoryId});
+        builder.HasKey(weighing => weighing.Id);
 
         builder
             .HasOne(weighing => weighing.Tournament)
-            .WithOne()
-            .HasForeignKey<Weighing>(weighing => weighing.TournamentId);
+            .WithMany(tournament => tournament.Weighing)
+            .HasForeignKey(weighing => weighing.TournamentId);
 
         builder
             .HasOne(weighing => weighing.Sportsman)
-            .WithOne()
-            .HasForeignKey<Weighing>(weighing => weighing.SportsmanId);
+            .WithMany(sportsman => sportsman.Weighing)
+            .HasForeignKey(weighing => weighing.SportsmanId);
 
         builder
             .HasOne(weighing => weighing.SportCategory)
-            .WithOne()
-            .HasForeignKey<Weighing>(weighing => weighing.SportCategoryId);
+            .WithMany(sportCategory => sportCategory.Weighing)
+            .HasForeignKey(weighing => weighing.SportCategoryId);
     }
 }

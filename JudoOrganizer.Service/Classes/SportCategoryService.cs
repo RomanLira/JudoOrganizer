@@ -22,6 +22,11 @@ public class SportCategoryService : Repository<SportCategory>, ISportCategorySer
             .OrderBy(sportCategory => sportCategory.Id)
             .ToListAsync();
 
+    public async Task<IEnumerable<SportCategory>> GetAllSportCategoriesForSportsmanAsync(Sportsman sportsman) =>
+        await GetAllAsync().Result.Where(sportCategory => sportCategory.Sex.Equals(sportsman.Sex) && sportCategory.DateOfBirth.Equals(sportsman.DateOfBirth))
+            .OrderBy(sportCategory => sportCategory.Id)
+            .ToListAsync();
+
     public async Task<SportCategory?> GetSportCategoryAsync(int id) =>
         await GetAsync(sportCategory => sportCategory.Id.Equals(id)).Result.SingleOrDefaultAsync();
 
@@ -34,15 +39,33 @@ public class SportCategoryService : Repository<SportCategory>, ISportCategorySer
     public async Task UpdateSportCategoryAsync(int id, SportCategory sportCategory)
     {
         var changedSportCategory = await GetSportCategoryAsync(id);
-        await DeleteSportCategoryAsync(changedSportCategory.Id);
-        await CreateSportCategoryAsync(sportCategory);
-        await SaveChangesAsync();
+        if (changedSportCategory != null)
+        {
+            changedSportCategory.Sex = sportCategory.Sex;
+            changedSportCategory.DateOfBirth = sportCategory.DateOfBirth;
+            changedSportCategory.TournamentId = sportCategory.TournamentId;
+            changedSportCategory.WeightId = sportCategory.WeightId;
+
+            await SaveChangesAsync();
+        }
+        else
+        {
+            throw new Exception("Данные не найдены.");
+        }
     }
+
 
     public async Task DeleteSportCategoryAsync(int id)
     {
         var sportCategory = await GetSportCategoryAsync(id);
-        await DeleteAsync(sportCategory);
-        await SaveChangesAsync();
+        if (sportCategory != null)
+        {
+            await DeleteAsync(sportCategory);
+            await SaveChangesAsync();
+        }
+        else
+        {
+            throw new Exception("Данные не найдены.");
+        }
     }
 }

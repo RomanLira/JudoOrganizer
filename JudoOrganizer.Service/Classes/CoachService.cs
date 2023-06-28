@@ -26,6 +26,9 @@ public class CoachService : Repository<Coach>, ICoachService
     public async Task<Coach?> GetCoachAsync(int id) =>
         await GetAsync(coach => coach.Id.Equals(id)).Result.SingleOrDefaultAsync();
 
+    public async Task<Coach?> GetCoachByUserIdAsync(int userId) =>
+        await GetAsync(coach => coach.UserId.Equals(userId)).Result.SingleOrDefaultAsync();
+
     public async Task CreateCoachAsync(Coach coach)
     {
         await CreateAsync(coach);
@@ -35,15 +38,34 @@ public class CoachService : Repository<Coach>, ICoachService
     public async Task UpdateCoachAsync(int id, Coach coach)
     {
         var changedCoach = await GetCoachAsync(id);
-        await DeleteCoachAsync(changedCoach.Id);
-        await CreateCoachAsync(coach);
-        await SaveChangesAsync();
+        if (changedCoach != null)
+        {
+            changedCoach.LastName = coach.LastName;
+            changedCoach.FirstName = coach.FirstName;
+            changedCoach.Patronymic = coach.Patronymic;
+            changedCoach.Phone = coach.Phone;
+            changedCoach.ClubId = coach.ClubId;
+
+            await SaveChangesAsync();
+        }
+        else
+        {
+            throw new Exception("Тренер не найден.");
+        }
     }
+
 
     public async Task DeleteCoachAsync(int id)
     {
         var coach = await GetCoachAsync(id);
-        await DeleteAsync(coach);
-        await SaveChangesAsync();
+        if (coach != null)
+        {
+            await DeleteAsync(coach);
+            await SaveChangesAsync();
+        }
+        else
+        {
+            throw new Exception("Тренер не найден.");
+        }
     }
 }

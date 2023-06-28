@@ -22,13 +22,11 @@ public class MatchResultService : Repository<MatchResult>, IMatchResultService
             .OrderBy(matchResult => matchResult.Id)
             .ToListAsync();
     
-    public async Task<IEnumerable<MatchResult>> GetAllMatchResultsForTournamentResultAsync(int tournamentResultId) =>
-        await GetAllAsync().Result.Where(matchResult => matchResult.TournamentResultId.Equals(tournamentResultId))
-            .OrderBy(matchResult => matchResult.Id)
-            .ToListAsync();
-
     public async Task<MatchResult?> GetMatchResultAsync(int id) =>
         await GetAsync(matchResult => matchResult.Id.Equals(id)).Result.SingleOrDefaultAsync();
+    
+    public async Task<MatchResult?> GetMatchResultForMatchIdAsync(int matchId) =>
+        await GetAsync(matchResult => matchResult.MatchId.Equals(matchId)).Result.SingleOrDefaultAsync();
 
     public async Task CreateMatchResultAsync(MatchResult matchResult)
     {
@@ -39,15 +37,33 @@ public class MatchResultService : Repository<MatchResult>, IMatchResultService
     public async Task UpdateMatchResultAsync(int id, MatchResult matchResult)
     {
         var changedMatchResult = await GetMatchResultAsync(id);
-        await DeleteMatchResultAsync(changedMatchResult.Id);
-        await CreateMatchResultAsync(matchResult);
-        await SaveChangesAsync();
+        if (changedMatchResult != null)
+        {
+            changedMatchResult.Date = matchResult.Date;
+            changedMatchResult.Round = matchResult.Round;
+            changedMatchResult.WinnerId = matchResult.WinnerId;
+            changedMatchResult.MatchId = matchResult.MatchId;
+
+            await SaveChangesAsync();
+        }
+        else
+        {
+            throw new Exception("Данные не найдены.");
+        }
     }
+
 
     public async Task DeleteMatchResultAsync(int id)
     {
         var matchResult = await GetMatchResultAsync(id);
-        await DeleteAsync(matchResult);
-        await SaveChangesAsync();
+        if (matchResult != null)
+        {
+            await DeleteAsync(matchResult);
+            await SaveChangesAsync();
+        }
+        else
+        {
+            throw new Exception("Данные не найдены.");
+        }
     }
 }

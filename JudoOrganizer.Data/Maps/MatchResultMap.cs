@@ -10,11 +10,6 @@ public class MatchResultMap
         builder.HasKey(matchResult => matchResult.Id);
 
         builder
-            .HasOne(matchResult => matchResult.TournamentResult)
-            .WithMany(tournamentResult => tournamentResult.MatchResults)
-            .HasForeignKey(matchResult => matchResult.TournamentResultId);
-        
-        builder
             .HasOne(matchResult => matchResult.Match)
             .WithOne()
             .HasForeignKey<MatchResult>(matchResult => matchResult.MatchId);

@@ -29,15 +29,30 @@ public class CountryService : Repository<Country>, ICountryService
     public async Task UpdateCountryAsync(int id, Country country)
     {
         var changedCountry = await GetCountryAsync(id);
-        await DeleteCountryAsync(changedCountry.Id);
-        await CreateCountryAsync(country);
-        await SaveChangesAsync();
+        if (changedCountry != null)
+        {
+            changedCountry.Name = country.Name;
+
+            await SaveChangesAsync();
+        }
+        else
+        {
+            throw new Exception("Страна не найдена.");
+        }
     }
+
 
     public async Task DeleteCountryAsync(int id)
     {
         var country = await GetCountryAsync(id);
-        await DeleteAsync(country);
-        await SaveChangesAsync();
+        if (country != null)
+        {
+            await DeleteAsync(country);
+            await SaveChangesAsync();
+        }
+        else
+        {
+            throw new Exception("Страна не найдена.");
+        }
     }
 }

@@ -29,15 +29,30 @@ public class WeightService : Repository<Weight>, IWeightService
     public async Task UpdateWeightAsync(int id, Weight weight)
     {
         var changedWeight = await GetWeightAsync(id);
-        await DeleteWeightAsync(changedWeight.Id);
-        await CreateWeightAsync(weight);
-        await SaveChangesAsync();
+        if (changedWeight != null)
+        {
+            changedWeight.WeightValue = weight.WeightValue;
+
+            await SaveChangesAsync();
+        }
+        else
+        {
+            throw new Exception("Данные не найдены.");
+        }
     }
+
 
     public async Task DeleteWeightAsync(int id)
     {
         var weight = await GetWeightAsync(id);
-        await DeleteAsync(weight);
-        await SaveChangesAsync();
+        if (weight != null)
+        {
+            await DeleteAsync(weight);
+            await SaveChangesAsync();
+        }
+        else
+        {
+            throw new Exception("Данные не найдены.");
+        }
     }
 }

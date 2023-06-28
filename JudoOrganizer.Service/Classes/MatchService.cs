@@ -16,11 +16,9 @@ public class MatchService : Repository<Match>, IMatchService
 
     public async Task<IEnumerable<Match>> GetAllMatchesAsync() =>
         await GetAllAsync().Result.OrderBy(match => match.Id).ToListAsync();
-
-    public async Task<IEnumerable<Match>> GetAllMatchesForSportsmanAsync(int sportsmanId) =>
-        await GetAllAsync().Result.Where(match => match.SportsmanId.Equals(sportsmanId))
-            .OrderBy(match => match.Id)
-            .ToListAsync();
+    
+    public async Task<IEnumerable<Match>> GetAllMatchesForSportCategoryAsync(int sportCategoryId) =>
+        await GetAllAsync().Result.Where(match => match.SportCategoryId.Equals(sportCategoryId)).OrderBy(match => match.Id).ToListAsync();
 
     public async Task<Match?> GetMatchAsync(int id) =>
         await GetAsync(match => match.Id.Equals(id)).Result.SingleOrDefaultAsync();
@@ -34,15 +32,32 @@ public class MatchService : Repository<Match>, IMatchService
     public async Task UpdateMatchAsync(int id, Match match)
     {
         var changedMatch = await GetMatchAsync(id);
-        await DeleteMatchAsync(changedMatch.Id);
-        await CreateMatchAsync(match);
-        await SaveChangesAsync();
+        if (changedMatch != null)
+        {
+            changedMatch.Number = match.Number;
+            changedMatch.Rivals = match.Rivals;
+            changedMatch.TournamentId = match.TournamentId;
+            changedMatch.SportCategoryId = match.SportCategoryId;
+            await SaveChangesAsync();
+        }
+        else
+        {
+            throw new Exception("Данные не найдены.");
+        }
     }
+
 
     public async Task DeleteMatchAsync(int id)
     {
         var match = await GetMatchAsync(id);
-        await DeleteAsync(match);
-        await SaveChangesAsync();
+        if (match != null)
+        {
+            await DeleteAsync(match);
+            await SaveChangesAsync();
+        }
+        else
+        {
+            throw new Exception("Данные не найдены.");
+        }
     }
 }

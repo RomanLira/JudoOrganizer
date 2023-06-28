@@ -13,5 +13,9 @@ public class CoachMap
             .HasOne(coach => coach.Club)
             .WithMany(club => club.Coaches)
             .HasForeignKey(coach => coach.ClubId);
+        builder
+            .HasOne(coach => coach.User)
+            .WithOne()
+            .HasForeignKey<Coach>(coach => coach.UserId);
     }
 }

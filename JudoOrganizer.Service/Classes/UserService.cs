@@ -20,6 +20,9 @@ public class UserService : Repository<User>, IUserService
     public async Task<User?> GetUserAsync(int id) =>
         await GetAsync(user => user.Id.Equals(id)).Result.SingleOrDefaultAsync();
 
+    public async Task<User?> GetUserByLoginAsync(string login) =>
+        await GetAsync(user => user.Login.Equals(login)).Result.SingleOrDefaultAsync();
+
     public async Task CreateUserAsync(User user)
     {
         await CreateAsync(user);
@@ -29,15 +32,33 @@ public class UserService : Repository<User>, IUserService
     public async Task UpdateUserAsync(int id, User user)
     {
         var changedUser = await GetUserAsync(id);
-        await DeleteUserAsync(changedUser.Id);
-        await CreateUserAsync(user);
-        await SaveChangesAsync();
+        if (changedUser != null)
+        {
+            changedUser.Login = user.Login;
+            changedUser.Email = user.Email;
+            changedUser.Password = user.Password;
+            changedUser.Role = user.Role;
+
+            await SaveChangesAsync();
+        }
+        else
+        {
+            throw new Exception("Пользователь не найден.");
+        }
     }
+
 
     public async Task DeleteUserAsync(int id)
     {
         var user = await GetUserAsync(id);
-        await DeleteAsync(user);
-        await SaveChangesAsync();
+        if (user != null)
+        {
+            await DeleteAsync(user);
+            await SaveChangesAsync();
+        }
+        else
+        {
+            throw new Exception("Пользователь не найден.");
+        }
     }
 }

@@ -13,11 +13,13 @@ public class RepositoryManager : IRepositoryManager
     private ICountryService _countryService;
     private IMatchService _matchService;
     private IMatchResultService _matchResultService;
+    private IRegistrationService _registrationService;
     private ISportCategoryService _sportCategoryService;
     private ISportsmanService _sportsmanService;
     private ITournamentService _tournamentService;
     private ITournamentResultService _tournamentResultService;
     private IUserService _userService;
+    private IWeighingService _weighingService;
     private IWeightService _weightService;
 
     public RepositoryManager(ApplicationContext applicationContext)
@@ -64,7 +66,7 @@ public class RepositoryManager : IRepositoryManager
             return _countryService;
         }
     }
-    
+
     public IMatchService Match
     {
         get
@@ -82,6 +84,16 @@ public class RepositoryManager : IRepositoryManager
             if (_matchResultService is null)
                 _matchResultService = new MatchResultService(_applicationContext);
             return _matchResultService;
+        }
+    }
+
+    public IRegistrationService Registration
+    {
+        get
+        {
+            if (_registrationService is null)
+                _registrationService = new RegistrationService(_applicationContext);
+            return _registrationService;
         }
     }
     
@@ -132,6 +144,16 @@ public class RepositoryManager : IRepositoryManager
             if (_userService is null)
                 _userService = new UserService(_applicationContext);
             return _userService;
+        }
+    }
+    
+    public IWeighingService Weighing
+    {
+        get
+        {
+            if (_weighingService is null)
+                _weighingService = new WeighingService(_applicationContext);
+            return _weighingService;
         }
     }
     

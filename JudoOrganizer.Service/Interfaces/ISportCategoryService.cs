@@ -6,6 +6,7 @@ public interface ISportCategoryService
 {
     Task<IEnumerable<SportCategory>> GetAllSportCategoriesAsync();
     Task<IEnumerable<SportCategory>> GetAllSportCategoriesForTournamentAsync(int tournamentId);
+    Task<IEnumerable<SportCategory>> GetAllSportCategoriesForSportsmanAsync(Sportsman sportsman);
     Task<SportCategory?> GetSportCategoryAsync(int id);
     Task CreateSportCategoryAsync(SportCategory sportCategory);
     Task UpdateSportCategoryAsync(int id, SportCategory sportCategory);

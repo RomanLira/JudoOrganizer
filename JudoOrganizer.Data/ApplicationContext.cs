@@ -12,13 +12,12 @@ public class ApplicationContext : DbContext
     }
     
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=judoDB;Username=postgres;Password=1");
+        => optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=judoDataBase;Username=postgres;Password=1");
     
     public DbSet<City> Cities { get; set; }
     public DbSet<Club> Clubs { get; set; }
     public DbSet<Coach> Coaches { get; set; }
     public DbSet<Country> Countries { get; set; }
-    public DbSet<Draw> Draws { get; set; }
     public DbSet<Match> Matches { get; set; }
     public DbSet<MatchResult> MatchResults { get; set; }
     public DbSet<Registration> Registrations { get; set; }
@@ -36,7 +35,6 @@ public class ApplicationContext : DbContext
         new ClubMap(model.Entity<Club>());
         new CoachMap(model.Entity<Coach>());
         new CountryMap(model.Entity<Country>());
-        new DrawMap(model.Entity<Draw>());
         new MatchMap(model.Entity<Match>());
         new MatchResultMap(model.Entity<MatchResult>());
         new RegistrationMap(model.Entity<Registration>());

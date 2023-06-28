@@ -9,11 +9,31 @@
     }
   },
   "profiles": {
-    "JudoOrganizer": {
+    "http": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,
-      "launchUrl": "swagger",
+      "launchUrl": "authorization.html",
+      "applicationUrl": "http://localhost:5258",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "https": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchUrl": "authorization.html",
+      "launchBrowser": true,
+      "applicationUrl": "https://localhost:7258;http://localhost:5258",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "JudoOrganizer": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchUrl": "authorization.html",
+      "launchBrowser": true,
       "applicationUrl": "https://localhost:7258;http://localhost:5258",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
@@ -21,8 +41,8 @@
     },
     "IIS Express": {
       "commandName": "IISExpress",
+      "launchUrl": "authorization.html",
       "launchBrowser": true,
-      "launchUrl": "swagger",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }

@@ -16,7 +16,7 @@ public class SportCategoryMap
         
         builder
             .HasOne(sportCategory => sportCategory.Weight)
-            .WithOne()
-            .HasForeignKey<SportCategory>(sportCategory => sportCategory.WeightId);
+            .WithMany(weight => weight.SportCategories)
+            .HasForeignKey(sportCategory => sportCategory.WeightId);
     }
 }

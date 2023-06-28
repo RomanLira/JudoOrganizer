@@ -29,15 +29,31 @@ public class TournamentResultService : Repository<TournamentResult>, ITournament
     public async Task UpdateTournamentResultAsync(int id, TournamentResult tournamentResult)
     {
         var changedTournamentResult = await GetTournamentResultAsync(id);
-        await DeleteTournamentResultAsync(changedTournamentResult.Id);
-        await CreateTournamentResultAsync(tournamentResult);
-        await SaveChangesAsync();
+        if (changedTournamentResult != null)
+        {
+            changedTournamentResult.Date = tournamentResult.Date;
+            changedTournamentResult.TournamentId = tournamentResult.TournamentId;
+
+            await SaveChangesAsync();
+        }
+        else
+        {
+            throw new Exception("Данные не найдены.");
+        }
     }
+
 
     public async Task DeleteTournamentResultAsync(int id)
     {
         var tournamentResult = await GetTournamentResultAsync(id);
-        await DeleteAsync(tournamentResult);
-        await SaveChangesAsync();
+        if (tournamentResult != null)
+        {
+            await DeleteAsync(tournamentResult);
+            await SaveChangesAsync();
+        }
+        else
+        {
+            throw new Exception("Данные не найдены.");
+        }
     }
 }
