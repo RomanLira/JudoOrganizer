@@ -1,0 +1,241 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Добавить тренера</title>
+    <link rel="stylesheet" type="text/css" href="css/authStyle.css" />
+</head>
+<body>
+    <header>
+        <h1 onclick="location.reload();">Judo Organizer</h1>
+    </header>
+
+    <div class="container">
+        <div class="form-group">
+            <h2>Информация о тренере</h2>
+            <div class="form-group">
+                <input type="hidden" id="Id" />
+            </div>
+            <div class="form-group">
+                <label for="lastName">Фамилия:</label>
+                <input type="text" id="lastName" placeholder="Фамилия" required>
+            </div>
+            <div class="form-group">
+                <label for="firstName">Имя:</label>
+                <input type="text" id="firstName" placeholder="Имя" required>
+            </div>
+            <div class="form-group">
+                <label for="patronymic">Отчество:</label>
+                <input type="text" id="patronymic" placeholder="Отчество">
+            </div>
+            <div class="form-group">
+                <label for="phone">Номер телефона:</label>
+                <input type="text" id="phone" placeholder="Номер телефона" required>
+            </div>
+            <div class="form-group">
+                <label for="country">Страна:</label>
+                <select id="country" name="country" required onchange="getCitiesByCountry()">
+                    <option value="" disabled selected>Выберите страну</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="city">Город:</label>
+                <select id="city" name="city" required onchange="getClubsByCity()">
+                    <option value="" disabled selected>Выберите город</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="club">Клуб:</label>
+                <select id="club" name="club" required>
+                    <option value="" disabled selected>Выберите клуб</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <button onclick="sendPostRequest()">Подтвердить</button>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <p>&copy; 2023 МОУ ДО "СДЮШОР борьбы и бокса" г. Тирасполь. Все права защищены.</p>
+    </footer>
+    <script>
+        let userId;
+        async function getAuthenticatedUser() {
+            try {
+                const response = await fetch('/api/Users/IsAuthenticated');
+                if (!response.ok) {
+                    throw new Error('Ошибка при проверке аутентификации пользователя');
+                }
+
+                const roleResponse = await fetch('/api/Users/GetCurrentUserRole');
+                if (!roleResponse.ok) {
+                    throw new Error('Ошибка при получении роли пользователя');
+                }
+
+                const roleData = await roleResponse.json();
+                const role = roleData.role;
+
+                if (role !== 'Admin' && role !== 'Coach') {
+                    window.location.href = 'unauthorized.html';
+                    return;
+                }
+                
+                const idResponse = await fetch('/api/Users/GetCurrentUserId');
+                if (!idResponse.ok) {
+                    throw new Error('Ошибка при получении id пользователя');
+                }
+
+                const idData = await idResponse.json();
+                userId = idData.id;
+            }
+            catch (error) {
+                console.log('Ошибка при получении информации об аутентификации пользователя:', error);
+                swindow.location.href = 'unauthorized.html';
+            }
+        }
+
+
+        async function getCountries() {
+            try {
+                const response = await fetch('/api/countries')
+                if (!response.ok) {
+                    throw new Error('Ошибка при получении списка стран');
+                }
+
+                const countries = await response.json();
+                const countrySelect = document.getElementById('country');
+                countries.forEach(country => {
+                    const option = document.createElement('option');
+                    option.value = country.id;
+                    option.text = country.name;
+                    countrySelect.appendChild(option);
+                });
+            }
+            catch (error) {
+                console.log('Ошибка при получении списка стран:', error);
+            }
+
+        }
+
+        async function getCitiesByCountry() {
+            try {
+                const countryId = document.getElementById('country').value;
+                const citySelect = document.getElementById('city');
+                citySelect.innerHTML = '<option value="" disabled selected>Выберите город</option>'; 
+                
+                const response = await fetch(`/api/countries/country/${countryId}/cities`)
+                if (!response.ok) {
+                    throw new Error('Ошибка при получении списка городов');
+                }
+                const cities = await response.json();
+                cities.forEach(city => {
+                    const option = document.createElement('option');
+                    option.value = city.id;
+                    option.text = city.name;
+                    citySelect.appendChild(option);
+                });  
+            }
+            catch (error) {
+                console.log('Ошибка при получении списка городов:', error);
+            }
+        }
+
+        async function getClubsByCity() {
+            try {
+                const cityId = document.getElementById('city').value;
+                const clubSelect = document.getElementById('club');
+                clubSelect.innerHTML = '<option value="" disabled selected>Выберите клуб</option>'; 
+                
+                const response = await fetch(`/api/cities/city/${cityId}/clubs`)
+                if (!response.ok) {
+                    throw new Error('Ошибка при получении списка клубов');
+                }
+
+                const clubs = await response.json();
+                clubs.forEach(club => {
+                    const option = document.createElement('option');
+                    option.value = club.id;
+                    option.text = club.name;
+                    clubSelect.appendChild(option);
+                });
+            }
+            catch (error) {
+                console.log('Ошибка при получении списка клубов:', error);
+            }
+        }
+
+        const uri = 'api/coaches';
+        async function postData(url = '', data = {}) {
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const errorMessage = await response.text();
+                    throw new Error(errorMessage);
+                }
+                const result = await response.json();
+                console.log(result);
+                window.location.href = 'index_coach.html';
+
+            } catch (error) {
+                console.log('Произошла ошибка:', error);
+                alert('Произошла ошибка! ' + error + ' Попробуйте ещё раз.');
+            }
+            reset();
+        }
+
+        function sendPostRequest() {
+            const lastName = document.getElementById("lastName").value;
+            const firstName = document.getElementById("firstName").value;
+            const patronymic = document.getElementById('patronymic').value;
+            const phone = document.getElementById('phone').value;
+            const club = document.getElementById('club').value;
+            const textRegex = /^[A-Za-zА-Яа-яЁё\s]*$/;
+            const phoneRegex = /^[\d\s()-]*$/;
+            if (!lastName || !firstName || !phone || !club) {
+                alert('Заполните все поля!');
+                return;
+            }
+            if (!textRegex.test(lastName) || !textRegex.test(firstName) || !textRegex.test(patronymic)) {
+                alert("Недопустимый формат текстового ввода!");
+                return;
+            }
+            if (!phoneRegex.test(phone)) {
+                alert("Недопустимый формат номера телефона!");
+                return;
+            }
+            const coach =
+            {
+                "lastName": lastName,
+                "firstName": firstName,
+                "patronymic": patronymic,
+                "phone": phone,
+                "clubId": parseInt(club),
+                "userId": userId
+                
+            };
+            postData(uri, coach);
+        }
+
+        function reset() {
+                document.getElementById("lastName").value =
+                document.getElementById("firstName").value =
+                document.getElementById("patronymic").value =
+                document.getElementById("phone").value =
+                document.getElementById("country").value =
+                document.getElementById("city").value =
+                document.getElementById("club").value = "";
+        }
+
+        getAuthenticatedUser();
+        getCountries();
+    </script>
+</body>
+</html>

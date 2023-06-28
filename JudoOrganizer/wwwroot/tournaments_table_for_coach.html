@@ -1,0 +1,199 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Турниры</title>
+    <link rel="stylesheet" type="text/css" href="css/styles.css" />
+</head>
+<body>
+    <header>
+        <h1 onclick="location.reload();">Judo Organizer</h1>
+    </header>
+    <nav>
+        <ul>
+            <li><a href="index_coach.html">Главная</a></li>
+            <li><a href="club_info.html">Клуб</a></li>
+            <li><a href="tournaments_table_for_coach.html">Турниры</a></li>
+            <li><a href="change_coach_info.html">Профиль</a></li>
+            <li><a href="contacts.html">Контакты</a></li>
+        </ul>
+    </nav>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>Организатор</th>
+                    <th>Место</th>
+                    <th>Дата и время</th>
+                </tr>
+            </thead>
+            <tbody id="tournamentTableBody"></tbody>
+        </table>
+    </div>
+    <div class="overlay"></div>
+    <footer>
+        <p>&copy; 2023 МОУ ДО "СДЮШОР борьбы и бокса" г. Тирасполь. Все права защищены.</p>
+    </footer>
+    <script>
+        let userId;
+        let coachId;
+        let clubId;
+        async function getAuthenticatedUser() {
+            try {
+                const response = await fetch('/api/Users/IsAuthenticated')
+                if (!response.ok) {
+                    throw new Error('Ошибка при проверке аутентификации пользователя');
+                }
+
+                const roleResponse = await fetch('/api/Users/GetCurrentUserRole');
+                if (!roleResponse.ok) {
+                    throw new Error('Ошибка при получении роли пользователя');
+                }
+
+                const roleData = await roleResponse.json();
+                const role = roleData.role;
+
+                if (role !== 'Coach') {
+                    window.location.href = 'unauthorized.html';
+                }
+
+                const idResponse = await fetch('/api/Users/GetCurrentUserId');
+                if (!idResponse.ok) {
+                    throw new Error('Ошибка при получении id пользователя');
+                }
+
+                const idData = await idResponse.json();
+                userId = idData.id;
+                await getCoachByUserId();
+            }
+            catch (error) {
+                console.log('Ошибка при получении информации об аутентификации пользователя:', error);
+                window.location.href = 'unauthorized.html';
+            }
+        }
+
+        async function getCoachByUserId() {
+            try {
+                const response = await fetch(`/api/coaches/coachbyuserid/${userId}`);
+                if (!response.ok) {
+                    throw new Error('Ошибка при получении информации о тренере');
+                }
+                const coachData = await response.json();
+                coachId = coachData.id;
+                clubId = coachData.clubId;
+            } catch (error) {
+                console.log('Ошибка при получении информации о тренере:', error);
+                return null;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            getAuthenticatedUser()
+                .then(() => {
+                    return getTournaments();
+                })
+                .catch(error => {
+                    console.log('Ошибка при выполнении скрипта:', error);
+                    window.location.href = 'unauthorized.html';
+                });
+        });
+
+        async function getTournaments() {
+            try {
+                const response = await fetch(`api/Tournaments/OpenedRegistration`);
+                if (!response.ok) {
+                    throw new Error('Ошибка при выполнении запроса');
+                }
+                const tournaments = await response.json();
+                await displayTournaments(tournaments);
+            } catch (error) {
+                console.error('Произошла ошибка:', error);
+            }
+        }
+
+        async function displayTournaments(tournaments) {
+            const tableBody = document.getElementById('tournamentTableBody');
+            tableBody.innerHTML = '';
+
+            for (const tournament of tournaments) {
+                const row = document.createElement('tr');
+                row.classList.add('data-row');
+                row.dataset.id = tournament.id;
+                row.innerHTML = `
+                                                <td>${tournament.name}</td>
+                                                <td>${tournament.organizer}</td>
+                                                <td>${tournament.place}</td>
+                                                <td>${tournament.date}</td>
+                                            `;
+                row.addEventListener('click', handleRowClick);
+                tableBody.appendChild(row);
+            }
+        }
+
+        function handleRowClick(event) {
+            const tournamentRow = event.target.closest('.data-row');
+
+            const popup = document.createElement('div');
+            popup.className = 'popup';
+
+            const buttons = document.createElement('div');
+            buttons.className = 'popup-buttons';
+
+            const registrationButton = document.createElement('button');
+            registrationButton.textContent = 'Регистрация';
+            registrationButton.className = 'green-button';
+            registrationButton.addEventListener('click', function () { handleRegistrationButtonClick(event, tournamentRow); });
+
+            const cancelButton = document.createElement('button');
+            cancelButton.textContent = 'Отмена';
+            cancelButton.className = 'blue-button';
+            cancelButton.addEventListener('click', handleCancelButtonClick);
+
+            buttons.appendChild(registrationButton);
+            buttons.appendChild(cancelButton);
+            popup.appendChild(buttons);
+
+            popup.style.position = 'fixed';
+            popup.style.top = '50%';
+            popup.style.left = '50%';
+            popup.style.transform = 'translate(-50%, -50%)';
+            popup.classList.add('active');
+            const overlay = document.querySelector('.overlay');
+            overlay.classList.add('active');
+
+            document.body.appendChild(popup);
+        }
+
+        function handleRegistrationButtonClick(event, tournamentRow) {
+            if (tournamentRow) {
+                const tournamentData = {
+                    id: tournamentRow.dataset.id,
+                    name: tournamentRow.cells[0].textContent.trim(),
+                    date: tournamentRow.cells[3].textContent.trim()
+                };
+
+                const url = new URL('tournament_registration_for_coach.html', window.location.href);
+                url.searchParams.set('coachId', coachId);
+                url.searchParams.set('clubId', clubId);
+                url.searchParams.set('tournamentId', tournamentData.id);
+                url.searchParams.set('name', tournamentData.name);
+                url.searchParams.set('date', tournamentData.date);
+                window.location.href = url.href;
+            }
+            else {
+                console.log('Error!');
+            }
+            event.stopPropagation();
+        }
+
+        function handleCancelButtonClick(event) {
+            const popup = document.querySelector('.popup');
+            const overlay = document.querySelector('.overlay');
+            popup.remove();
+            overlay.classList.remove('active');
+            event.stopPropagation();
+        }
+    </script>
+</body>
+</html>

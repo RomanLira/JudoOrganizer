@@ -1,0 +1,181 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Жеребьевка</title>
+    <link rel="stylesheet" type="text/css" href="css/styles.css" />
+</head>
+<body>
+<header>
+    <h1 onclick="location.reload();">Judo Organizer</h1>
+</header>
+<nav>
+    <ul>
+        <li><a href="index.html">Главная</a></li>
+        <li><a href="clubs_table.html">Клубы</a></li>
+        <li><a href="sportsmen_table.html">Спортсмены</a></li>
+        <li><a href="coaches_table.html">Пользователи</a></li>
+        <li><a href="tournaments_table.html">Турниры</a></li>
+    </ul>
+</nav>
+<div class="container">
+    <div class="form-group">
+    <button class="green-button" onclick="startDraw()">Провести жеребьевку</button>
+    </div>
+</div>
+<footer>
+    <p>&copy; 2023 МОУ ДО "СДЮШОР борьбы и бокса" г. Тирасполь. Все права защищены.</p>
+</footer>
+<script>
+    let tournamentId;
+    let sportCategories;
+    let sportsmen = [];
+    async function getAuthenticatedUser() {
+        try {
+            const response = await fetch('/api/Users/IsAuthenticated')
+            if (!response.ok) {
+                throw new Error('Ошибка при проверке аутентификации пользователя');
+            }
+
+            const roleResponse = await fetch('/api/Users/GetCurrentUserRole');
+            if (!roleResponse.ok) {
+                throw new Error('Ошибка при получении роли пользователя');
+            }
+
+            const roleData = await roleResponse.json();
+            const role = roleData.role;
+
+            if (role !== 'Admin') {
+                window.location.href = 'unauthorized.html';
+            }
+        } catch (error) {
+            console.log('Ошибка при получении информации об аутентификации пользователя:', error);
+            window.location.href = 'unauthorized.html';
+        }
+    }
+    
+    async function getSportCategories() {
+        try {
+            const response = await fetch(`api/Tournaments/Tournament/${tournamentId}/SportCategories`);
+            if (!response.ok) {
+                throw new Error('Ошибка при выполнении запроса');
+            }
+            sportCategories = await response.json();
+        } catch (error) {
+            console.error('Произошла ошибка:', error);
+        }
+    }
+    
+    async function startDraw() {
+        try {
+            await getSportCategories();
+            for(category of sportCategories) {
+                const response = await fetch(`api/Registration/Category/${category.id}`);
+                if (!response.ok) {
+                    throw new Error('Ошибка при выполнении запроса');
+                }
+                sportsmen = await response.json();
+                const count = sportsmen.length;
+                let flag = false;
+                let n = 1;
+                while (flag !== true) {
+                    if(count === Math.pow(2, n)) {
+                        break;
+                    }
+                    if(count < Math.pow(2, n)) {
+                        let different = Math.pow(2, n) - count;
+                        for(let i = 0; i<different; i++) {
+                            sportsmen.push(0);
+                        }
+                    }
+                    else {
+                        n++;
+                    }
+                }
+                draw(sportsmen, category.id);
+            }
+            alert('Жеребьевка проведена успешно!');
+            const url = new URL('tournament_matches_table.html', window.location.href);
+            url.searchParams.set('id', tournamentId);
+            window.location.href = url.href;
+        }
+        catch (error) {
+            console.log('Ошибка при выполнении скрипта:', error);
+        }
+    }
+    
+    async function draw(sportsmen, categoryId) {
+        try {
+            let number = 0;
+            const shuffledSportsmen = shuffleArray(sportsmen);
+            const pairs = [];
+            for (let i = 0; i < shuffledSportsmen.length; i += 2) {
+                const pair = [shuffledSportsmen[i], shuffledSportsmen[i + 1]];
+                number++;
+                sendPostRequest(pair, categoryId, number);
+                pairs.push(pair);
+            }
+            console.log(pairs);
+        }
+        catch (error) {
+            console.log('Ошибка при выполнении скрипта:', error);
+        }
+    }
+    
+    function shuffleArray(array) {
+        const shuffledArray = [...array];
+        for (let i = shuffledArray.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]];
+        }
+        return shuffledArray;
+    }
+    
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            await getAuthenticatedUser();
+            const urlParams = new URLSearchParams(window.location.search);
+            tournamentId = urlParams.get('id');
+        }
+        catch (error) {
+            console.log('Ошибка при выполнении скрипта:', error);
+        }
+    });
+
+    const uri = 'api/matches';
+    const postData = async (url = '', data = {}) => {
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                const errorMessage = await response.text();
+                alert(errorMessage);
+            }
+            else {
+                const result = await response.json();
+                console.log(result);
+            }
+        } catch(error) {
+            alert('Произошла ошибка! ' + error + ' Попробуйте ещё раз.');
+        }
+    };
+
+    function sendPostRequest(pair, categoryId, number) {
+        const match = {
+            "number": number,
+            "rivals": pair,
+            "tournamentId": tournamentId,
+            "sportCategoryId": categoryId
+        };
+        postData(uri, match);
+    }
+</script>
+</body>
+</html>

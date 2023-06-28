@@ -1,0 +1,187 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Изменить клуб</title>
+    <link rel="stylesheet" type="text/css" href="css/authStyle.css" />
+</head>
+<body>
+    <header>
+        <h1 onclick="location.reload();">Judo Organizer</h1>
+    </header>
+    <nav>
+        <ul>
+            <li><a href="index.html">Главная</a></li>
+            <li><a href="clubs_table.html">Клубы</a></li>
+            <li><a href="sportsmen_table.html">Спортсмены</a></li>
+            <li><a href="users_table.html">Пользователи</a></li>
+            <li><a href="tournaments_table.html">Турниры</a></li>
+        </ul>
+    </nav>
+    <div class="container">
+        <div class="form-group">
+            <h2>Информация о клубе</h2>
+            <div class="form-group">
+                <label for="name">Название:</label>
+                <input type="text" id="name" placeholder="Название" required>
+            </div>
+            <div class="form-group">
+                <label for="city">Город:</label>
+                <select id="city" name="city" required>
+                    <option value="" disabled selected>Выберите город</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="address">Адрес:</label>
+                <input type="text" id="address" placeholder="Адрес" required>
+            </div>
+            <div class="form-group">
+                <button onclick="sendPutRequest()">Подтвердить</button>
+            </div>
+            <div class="form-group">
+                <button onclick="cancel()">Отменить</button>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <p>&copy; 2023 МОУ ДО "СДЮШОР борьбы и бокса" г. Тирасполь. Все права защищены.</p>
+    </footer>
+    <script>
+        let clubId;
+        async function getAuthenticatedUser() {
+            try {
+                const response = await fetch('/api/Users/IsAuthenticated')
+                if (!response.ok) {
+                    throw new Error('Ошибка при проверке аутентификации пользователя');
+                }
+
+                const roleResponse = await fetch('/api/Users/GetCurrentUserRole');
+                if (!roleResponse.ok) {
+                    throw new Error('Ошибка при получении роли пользователя');
+                }
+
+                const roleData = await roleResponse.json();
+                const role = roleData.role;
+
+                if (role !== 'Admin') {
+                    window.location.href = 'unauthorized.html';
+                }
+            } catch (error) {
+                console.log('Ошибка при получении информации об аутентификации пользователя:', error);
+                window.location.href = 'unauthorized.html';
+            }
+        }
+        function sendPutRequest() {
+            const updatedName = document.getElementById('name').value;
+            const updatedAddress = document.getElementById('address').value;
+            const updatedCity = document.getElementById('city').value;
+            const textRegex = /^[A-Za-zА-Яа-яЁё\s]*$/;
+            if (!updatedName || !updatedAddress || !updatedCity) {
+                alert('Заполните все поля!');
+                return;
+            }
+            if (!textRegex.test(updatedName)) {
+                alert("Недопустимый формат текстового ввода!");
+                return;
+            }
+            const updatedClub = {
+                id: clubId,
+                name: updatedName,
+                address: updatedAddress,
+                cityId: parseInt(updatedCity),
+            };
+            fetch('api/clubs', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updatedClub)
+            })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Данные клуба успешно обновлены!');
+                        window.location.href = 'clubs_table.html';
+                    } else {
+                        alert('Произошла ошибка при обновлении данных клуба.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка при выполнении PUT-запроса:', error);
+                });
+        }
+
+        function cancel() {
+            window.location.href = 'club_table.html';
+        }
+
+        async function getAllCities() {
+            try {
+                const response = await fetch('/api/cities');
+                if (!response.ok) {
+                    throw new Error('Ошибка при получении списка городов');
+                }
+                const citiesData = await response.json();
+                return citiesData;
+            } catch (error) {
+                console.log('Ошибка при получении списка городов:', error);
+                return [];
+            }
+        }
+
+        async function getCityData(cityId) {
+            try {
+                const response = await fetch(`/api/cities/city/${cityId}`);
+                if (!response.ok) {
+                    throw new Error('Ошибка при получении информации о городе');
+                }
+                const city = await response.json();
+                const citySelect = document.getElementById('city');
+                const options = citySelect.options;
+                for (let i = 0; i < options.length; i++) {
+                    if (options[i].value === city.id.toString()) {
+                        options[i].selected = true;
+                        break;
+                    }
+                }
+            } catch (error) {
+                console.log('Ошибка при получении информации о городе:', error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await getAuthenticatedUser();
+                const urlParams = new URLSearchParams(window.location.search);
+                clubId = urlParams.get('id');
+                const clubCityId = urlParams.get('cityId');
+                const clubAddress = urlParams.get('address');
+                const clubName = urlParams.get('name');
+                const clubCityName = urlParams.get('cityName');
+                
+                document.getElementById('name').value = clubName;
+                document.getElementById('city').value = clubCityName;
+                document.getElementById('address').value = clubAddress;
+
+
+                const cities = await getAllCities();
+                const citySelect = document.getElementById('city');
+                citySelect.innerHTML = '';
+                cities.forEach((city) => {
+                    const option = document.createElement('option');
+                    option.value = city.id;
+                    option.textContent = city.name;
+                    if (city.id === clubCityId) {
+                        option.selected = true;
+                    }
+                    citySelect.appendChild(option);
+                });
+                await getCityData(clubCityId);
+            }
+            catch (error) {
+                console.log('Ошибка при выполнении скрипта:', error);
+
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,199 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Добавить спортсмена</title>
+    <link rel="stylesheet" type="text/css" href="css/authStyle.css" />
+</head>
+<body>
+    <header>
+        <h1 onclick="location.reload();">Judo Organizer</h1>
+    </header>
+
+    <div class="container">
+        <div class="form-group">
+            <h2>Информация о спортсмене</h2>
+            <div class="form-group">
+                <label for="lastName">Фамилия:</label>
+                <input type="text" id="lastName" placeholder="Фамилия" required>
+            </div>
+            <div class="form-group">
+                <label for="firstName">Имя:</label>
+                <input type="text" id="firstName" placeholder="Имя" required>
+            </div>
+            <div class="form-group">
+                <label for="patronymic">Отчество:</label>
+                <input type="text" id="patronymic" placeholder="Отчество">
+            </div>
+            <div class="form-group">
+                <label for="dateOfBirth">Год рождения:</label>
+                <input type="number" id="dateOfBirth" placeholder="Год рождения" required>
+            </div>
+            <div class="form-group">
+                <label for="sex">Пол:</label>
+                <select id="sex" name="sex" required>
+                    <option value="" disabled selected>Выберите пол</option>
+                    <option value="Мужской">Мужской</option>
+                    <option value="Женский">Женский</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <button onclick="sendPostRequest()">Подтвердить</button>
+            </div>
+            <div class="form-group">
+                <button onclick="cancel()">Отменить</button>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <p>&copy; 2023 МОУ ДО "СДЮШОР борьбы и бокса" г. Тирасполь. Все права защищены.</p>
+    </footer>
+    <script>
+        let userId;
+        let clubId;
+        let coachId;
+        async function getAuthenticatedUser() {
+            try {
+                const response = await fetch('/api/Users/IsAuthenticated')
+                if (!response.ok) {
+                    throw new Error('Ошибка при проверке аутентификации пользователя');
+                }
+
+                const roleResponse = await fetch('/api/Users/GetCurrentUserRole');
+                if (!roleResponse.ok) {
+                    throw new Error('Ошибка при получении роли пользователя');
+                }
+
+                const roleData = await roleResponse.json();
+                const role = roleData.role;
+
+                if (role !== 'Coach') {
+                    window.location.href = 'unauthorized.html';
+                }
+
+                const idResponse = await fetch('/api/Users/GetCurrentUserId');
+                if (!idResponse.ok) {
+                    throw new Error('Ошибка при получении id пользователя');
+                }
+
+                const idData = await idResponse.json();
+                userId = idData.id;
+            }
+            catch (error) {
+                console.log('Ошибка при получении информации об аутентификации пользователя:', error);
+                window.location.href = 'unauthorized.html';
+            }
+        }
+
+        async function getCoachByUserId(userId) {
+            try {
+                const response = await fetch(`/api/coaches/coachbyuserid/${userId}`);
+                if (!response.ok) {
+                    throw new Error('Ошибка при получении информации о тренере');
+                }
+                const coachData = await response.json();
+                return coachData;
+            } catch (error) {
+                console.log('Ошибка при получении информации о тренере:', error);
+                return null;
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            getAuthenticatedUser()
+                .then(() => {
+                    return getCoachByUserId(userId);
+                })
+                .then(coach => {
+                    if (coach) {
+                        clubId = coach.clubId;
+                        coachId = coach.id;
+                    } else {
+                        console.log('Тренер не найден');
+                    }
+                })
+                .catch(error => {
+                    console.log('Ошибка при выполнении скрипта:', error);
+                    window.location.href = 'unauthorized.html';
+                });
+        });
+
+        const uri = 'api/sportsmen';
+        const postData = async (url = '', data = {}) => {
+            try {
+                response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const errorMessage = await response.text();
+                    alert('Ошибка: ' + errorMessage);
+                }
+                else {
+                    const result = await response.json();
+                    console.log(result);
+                    window.location.href = 'club_info.html';
+                }
+            } catch(error) {
+                alert('Произошла ошибка! ' + error + ' Попробуйте ещё раз.');
+            }
+            reset();
+        };
+
+        function sendPostRequest() {
+            const lastName = document.getElementById("lastName").value;
+            const firstName = document.getElementById("firstName").value;
+            const patronymic = document.getElementById('patronymic').value;
+
+            const textRegex = /^[A-Za-zА-Яа-яЁё\s]*$/;
+
+            const selectedSex = document.getElementById('sex').value;
+            
+            const dateOfBirth = document.getElementById("dateOfBirth").value;
+
+            const dateOfBirthRegex = /^(19|20)\d{2}$/;
+
+            if (!lastName || !firstName || !dateOfBirth || !selectedSex) {
+                alert('Заполните все поля!');
+                return;
+            }
+            if (!textRegex.test(lastName) || !textRegex.test(firstName) || !textRegex.test(patronymic)) {
+                alert("Недопустимый формат текстового ввода!");
+                return;
+            }
+            if (!dateOfBirthRegex.test(dateOfBirth)) {
+                alert("Неправильный формат года рождения!");
+                return;
+            }
+            const sportsman =
+            {
+                "lastName": lastName,
+                "firstName": firstName,
+                "patronymic": patronymic,
+                "dateOfBirth": dateOfBirth,
+                "sex": selectedSex,
+                "clubId": clubId,
+                "coachId": coachId
+            };
+            postData(uri, sportsman);
+        }
+
+        function reset() {
+                document.getElementById("lastName").value =
+                document.getElementById("firstName").value =
+                document.getElementById("patronymic").value =
+                document.getElementById("dateOfBirth").value =
+                document.getElementById("sex").value = "";
+        }
+
+        function cancel() {
+            window.location.href = 'club_info.html';
+        }
+    </script>
+</body>
+</html>

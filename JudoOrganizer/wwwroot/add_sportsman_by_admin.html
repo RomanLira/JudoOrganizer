@@ -1,0 +1,275 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Добавить спортсмена</title>
+    <link rel="stylesheet" type="text/css" href="css/authStyle.css" />
+</head>
+<body>
+    <header>
+        <h1 onclick="location.reload();">Judo Organizer</h1>
+    </header>
+    <div class="container">
+        <div class="form-group">
+            <h2>Информация о спортсмене</h2>
+            <div class="form-group">
+                <label for="lastName">Фамилия:</label>
+                <input type="text" id="lastName" placeholder="Фамилия" required>
+            </div>
+            <div class="form-group">
+                <label for="firstName">Имя:</label>
+                <input type="text" id="firstName" placeholder="Имя" required>
+            </div>
+            <div class="form-group">
+                <label for="patronymic">Отчество:</label>
+                <input type="text" id="patronymic" placeholder="Отчество">
+            </div>
+            <div class="form-group">
+                <label for="dateOfBirth">Год рождения:</label>
+                <input type="number" id="dateOfBirth" placeholder="Год рождения" required>
+            </div>
+            <div class="form-group">
+                <label for="sex">Пол:</label>
+                <select id="sex" name="sex" required>
+                    <option value="" disabled selected>Выберите пол</option>
+                    <option value="Мужской">Мужской</option>
+                    <option value="Женский">Женский</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="country">Страна:</label>
+                <select id="country" name="country" required onchange="getCitiesByCountry()">
+                    <option value="" disabled selected>Выберите страну</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="city">Город:</label>
+                <select id="city" name="city" required onchange="getClubsByCity()">
+                    <option value="" disabled selected>Выберите город</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="club">Клуб:</label>
+                <select id="club" name="club" required onchange="getCoachesByClub()">
+                    <option value="" disabled selected>Выберите клуб</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="coach">Тренер:</label>
+                <select id="coach" name="coach" required>
+                    <option value="" disabled selected>Выберите тренера</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <button onclick="sendPostRequest()">Подтвердить</button>
+            </div>
+            <div class="form-group">
+                <button onclick="cancel()">Отменить</button>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <p>&copy; 2023 МОУ ДО "СДЮШОР борьбы и бокса" г. Тирасполь. Все права защищены.</p>
+    </footer>
+    <script>
+        async function getAuthenticatedUser() {
+            try {
+                const response = await fetch('/api/Users/IsAuthenticated')
+                if (!response.ok) {
+                    throw new Error('Ошибка при проверке аутентификации пользователя');
+                }
+
+                const roleResponse = await fetch('/api/Users/GetCurrentUserRole');
+                if (!roleResponse.ok) {
+                    throw new Error('Ошибка при получении роли пользователя');
+                }
+
+                const roleData = await roleResponse.json();
+                const role = roleData.role;
+
+                if (role !== 'Admin') {
+                    window.location.href = 'unauthorized.html';
+                }
+            }
+            catch (error) {
+                console.log('Ошибка при получении информации об аутентификации пользователя:', error);
+                window.location.href = 'unauthorized.html';
+            }
+        }
+
+        async function getCountries() {
+            try {
+                const response = await fetch('/api/countries')
+                if (!response.ok) {
+                    throw new Error('Ошибка при получении списка стран');
+                }
+
+                const countries = await response.json();
+                const countrySelect = document.getElementById('country');
+                countries.forEach(country => {
+                    const option = document.createElement('option');
+                    option.value = country.id;
+                    option.text = country.name;
+                    countrySelect.appendChild(option);
+                });
+            }
+            catch (error) {
+                console.log('Ошибка при получении списка стран:', error);
+            }
+
+        }
+
+        async function getCitiesByCountry() {
+            try {
+                const countryId = document.getElementById('country').value;
+                const citySelect = document.getElementById('city');
+                citySelect.innerHTML = '<option value="" disabled selected>Выберите город</option>';
+                const response = await fetch(`/api/countries/country/${countryId}/cities`)
+                if (!response.ok) {
+                    throw new Error('Ошибка при получении списка городов');
+                }
+                const cities = await response.json();
+                cities.forEach(city => {
+                    const option = document.createElement('option');
+                    option.value = city.id;
+                    option.text = city.name;
+                    citySelect.appendChild(option);
+                });
+            }
+            catch (error) {
+                console.log('Ошибка при получении списка городов:', error);
+            }
+        }
+
+        async function getClubsByCity() {
+            try {
+                const cityId = document.getElementById('city').value;
+                const clubSelect = document.getElementById('club');
+                clubSelect.innerHTML = '<option value="" disabled selected>Выберите клуб</option>';
+                const response = await fetch(`/api/cities/city/${cityId}/clubs`)
+                if (!response.ok) {
+                    throw new Error('Ошибка при получении списка клубов');
+                }
+
+                const clubs = await response.json();
+                clubs.forEach(club => {
+                    const option = document.createElement('option');
+                    option.value = club.id;
+                    option.text = club.name;
+                    clubSelect.appendChild(option);
+                });
+            }
+            catch (error) {
+                console.log('Ошибка при получении списка клубов:', error);
+            }
+        }
+
+        async function getCoachesByClub() {
+            try {
+                const clubId = document.getElementById('club').value;
+                const coachSelect = document.getElementById('coach');
+                coachSelect.innerHTML = '<option value="" disabled selected>Выберите тренера</option>';
+                const response = await fetch(`/api/clubs/club/${clubId}/coaches`)
+                if (!response.ok) {
+                    throw new Error('Ошибка при получении списка тренеров');
+                }
+
+                const coaches = await response.json();
+                coaches.forEach(coach => {
+                    const option = document.createElement('option');
+                    option.value = coach.id;
+                    option.text = coach.lastName + " " + coach.firstName + " " + coach.patronymic;
+                    coachSelect.appendChild(option);
+                });
+            }
+            catch (error) {
+                console.log('Ошибка при получении списка тренеров:', error);
+            }
+        }
+
+        const uri = 'api/sportsmen';
+        const postData = async (url = '', data = {}) => {
+            try {
+                response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const errorMessage = await response.text();
+                    alert('Ошибка: ' + errorMessage);
+                }
+                else {
+                    const result = await response.json();
+                    console.log(result);
+                    window.location.href = 'sportsmen_table.html';
+                }
+            } catch (error) {
+                alert('Произошла ошибка! ' + error + ' Попробуйте ещё раз.');
+            }
+            reset();
+        };
+
+        function sendPostRequest() {
+            const lastName = document.getElementById("lastName").value;
+            const firstName = document.getElementById("firstName").value;
+            const patronymic = document.getElementById('patronymic').value;
+            const textRegex = /^[A-Za-zА-Яа-яЁё\s]*$/;
+
+            const selectedSex = document.getElementById('sex').value;
+            const club = document.getElementById('club').value;
+            const coach = document.getElementById('coach').value;
+
+            const dateOfBirth = document.getElementById("dateOfBirth").value;
+            const dateOfBirthRegex = /^(19|20)\d{2}$/;
+
+            if (!lastName || !firstName || !dateOfBirth || !selectedSex || !club || !coach) {
+                alert('Заполните все поля!');
+                return;
+            }
+            if (!textRegex.test(lastName) || !textRegex.test(firstName) || !textRegex.test(patronymic)) {
+                alert("Недопустимый формат текстового ввода!");
+                return;
+            }
+            if (!dateOfBirthRegex.test(dateOfBirth)) {
+                alert("Неправильный формат года рождения!");
+                return;
+            }
+            const sportsman =
+            {
+                "lastName": lastName,
+                "firstName": firstName,
+                "patronymic": patronymic,
+                "dateOfBirth": dateOfBirth,
+                "sex": selectedSex,
+                "clubId": parseInt(club),
+                "coachId": parseInt(coach)
+            };
+            postData(uri, sportsman);
+        }
+
+        function reset() {
+            document.getElementById("lastName").value =
+                document.getElementById("firstName").value =
+                document.getElementById("patronymic").value =
+                document.getElementById("dateOfBirth").value =
+                document.getElementById("sex").value =
+                document.getElementById("country").value =
+                document.getElementById("city").value =
+                document.getElementById("club").value =
+                document.getElementById("coach").value = "";
+        }
+
+        getAuthenticatedUser();
+        getCountries();
+
+        function cancel() {
+            window.location.href = 'sportsmen_table.html';
+        }
+    </script>
+</body>
+</html>

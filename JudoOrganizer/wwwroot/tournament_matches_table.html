@@ -1,0 +1,408 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Матчи</title>
+    <link rel="stylesheet" type="text/css" href="css/styles.css" />
+</head>
+<body>
+<header>
+    <h1 onclick="location.reload();">Judo Organizer</h1>
+</header>
+<nav>
+    <ul>
+        <li><a href="index.html">Главная</a></li>
+        <li><a href="clubs_table.html">Клубы</a></li>
+        <li><a href="sportsmen_table.html">Спортсмены</a></li>
+        <li><a href="coaches_table.html">Пользователи</a></li>
+        <li><a href="tournaments_table.html">Турниры</a></li>
+    </ul>
+</nav>
+<div class="container">
+    <div class="form-group">
+        <div class="form-group">
+            <label for="category">Категория:</label>
+            <select id="category" name="category" required>
+            </select>
+        </div>
+        <div class="form-group">
+            <button onclick="showTable()">Подтвердить</button>
+        </div>
+    </div>
+</div>
+<div class="table-container" style="display: none">
+    <table>
+        <thead>
+        <tr>
+            <th>Спортсмен №1</th>
+            <th>Спортсмен №2</th>
+            <th>Стадия</th>
+        </tr>
+        </thead>
+        <tbody id="matchTableBody"></tbody>
+    </table>
+    <div>
+        <button id="saveButton" onclick="saveResults()">Сохранить результаты</button>
+    </div>
+</div>
+<div id="div2" class="table-container" style="display: none">
+    <table>
+        <thead>
+        <tr>
+            <th>Спортсмен №1</th>
+            <th>Спортсмен №2</th>
+            <th>Стадия</th>
+        </tr>
+        </thead>
+        <tbody id="matchTableBody1"></tbody>
+    </table>
+    <div>
+        <button id="saveButton1" onclick="saveNewResults()">Сохранить результаты</button>
+    </div>
+</div>
+<div class="overlay"></div>
+<footer>
+    <p>&copy; 2023 МОУ ДО "СДЮШОР борьбы и бокса" г. Тирасполь. Все права защищены.</p>
+</footer>
+<script>
+    let sportCategories;
+    let tournamentId;
+    async function getAuthenticatedUser() {
+        try {
+            const response = await fetch('/api/Users/IsAuthenticated')
+            if (!response.ok) {
+                throw new Error('Ошибка при проверке аутентификации пользователя');
+            }
+
+            const roleResponse = await fetch('/api/Users/GetCurrentUserRole');
+            if (!roleResponse.ok) {
+                throw new Error('Ошибка при получении роли пользователя');
+            }
+
+            const roleData = await roleResponse.json();
+            const role = roleData.role;
+
+            if (role !== 'Admin') {
+                window.location.href = 'unauthorized.html';
+            }
+        } catch (error) {
+            console.log('Ошибка при получении информации об аутентификации пользователя:', error);
+            window.location.href = 'unauthorized.html';
+        }
+    }
+
+    async function getSportsmenCount(categoryId) {
+        try {
+            const response = await fetch(`api/Registration/Category/${categoryId}`);
+            if (!response.ok) {
+                throw new Error('Ошибка при выполнении запроса');
+            }
+            sportsmen = await response.json();
+            const count = sportsmen.length;
+            let flag = false;
+            let n = 1;
+            while (flag !== true) {
+                if(count === Math.pow(2, n)) {
+                    break;
+                }
+                if(count < Math.pow(2, n)) {
+                    let different = Math.pow(2, n) - count;
+                    for(let i = 0; i<different; i++) {
+                        sportsmen.push(0);
+                    }
+                }
+                else {
+                    n++;
+                }
+            }
+            return sportsmen.length;
+        } catch (error) {
+            console.error('Произошла ошибка:', error);
+            return '';
+        }
+    }
+
+    async function getSportCategoryData(sportCategoryId) {
+        try {
+            const response1 = await fetch(`api/sportCategories/sportCategory/${sportCategoryId}`);
+            if (!response1.ok) {
+                throw new Error('Ошибка при выполнении запроса');
+            }
+            const sportCategory = await response1.json();
+            const weightId = sportCategory.weightId;
+            const response2 = await fetch(`api/weights/weight/${weightId}`);
+            if (!response2.ok) {
+                throw new Error('Ошибка при выполнении запроса');
+            }
+            const weight = await response2.json();
+            const sportCategoryData = {
+                "sex": sportCategory.sex,
+                "dateOfBirth": sportCategory.dateOfBirth,
+                "weightValue": weight.weightValue
+            };
+            return sportCategoryData;
+        } catch (error) {
+            console.error('Произошла ошибка:', error);
+            return '';
+        }
+    }
+
+    async function getSportsmanData(sportsmanId) {
+        try {
+            const response = await fetch(`api/sportsmen/sportsman/${sportsmanId}`);
+            if (!response.ok) {
+                throw new Error('Ошибка при выполнении запроса');
+            }
+            const sportsman = await response.json();
+            const sportsmanData = {
+                "lastName": sportsman.lastName,
+                "firstName": sportsman.firstName,
+                "patronymic": sportsman.patronymic
+            };
+            return sportsmanData;
+        } catch (error) {
+            console.error('Произошла ошибка:', error);
+            return '';
+        }
+    }
+    
+    async function getRound(number, count) {
+        let round = '';
+        let tmp = count/2;
+        let tmpx = 0;
+        let tmpy = 0;
+        while(true) {
+            if(number === count) {
+                round = 'Финал';
+                break
+            }
+            if(number === count - 1) {
+                round = 'Матч за 3-е место';
+                break
+            }
+            if (number <= tmp + tmpx) {
+                round = `1/${tmp - tmpx}`;
+                break;
+            }
+            tmpy = tmp - tmpx;
+            tmp = tmp + tmpx;
+            tmpx = tmpy/2;
+        }
+        return round;
+    }
+
+    async function getSportCategory(categoryId) {
+        try {
+            const response = await fetch(`api/SportCategories/SportCategory/${categoryId}`);
+            if (!response.ok) {
+                throw new Error('Ошибка при выполнении запроса');
+            }
+            const sportCategory = await response.json();
+            return sportCategory;
+        } catch (error) {
+            console.error('Произошла ошибка:', error);
+        }
+    }
+
+    async function getCategories() {
+        try {
+            const categorySelect = document.getElementById('category');
+            const response = await fetch(`/api/Tournaments/Tournament/${tournamentId}/sportcategories`)
+            if (!response.ok) {
+                throw new Error('Ошибка при получении списка категорий');
+            }
+            const categories = await response.json();
+            for (category of categories) {
+                const response = await fetch(`/api/weights/weight/${category.weightId}`);
+                if (!response.ok) {
+                    throw new Error('Ошибка при получении веса');
+                }
+                if(category.tournamentId.toString() === tournamentId.toString()) {
+                    const weight = await response.json();
+                    const weightValue = weight.weightValue;
+                    const option = document.createElement('option');
+                    option.value = category.id;
+                    option.text = category.sex + "; " + category.dateOfBirth + " г. р.; " + weightValue + " кг.";
+                    categorySelect.appendChild(option);
+                }
+            }
+        }
+        catch (error) {
+            console.log('Ошибка при получении списка категорий:', error);
+        }
+    }
+
+    async function displayCategory(categoryId) {
+        const category = await getSportCategory(categoryId);
+        const tableBody = document.getElementById('matchTableBody');
+        const fragment = document.createDocumentFragment();
+
+        const loadingRow = document.createElement('tr');
+        loadingRow.innerHTML = '<td colspan="8">Загрузка...</td>';
+        fragment.appendChild(loadingRow);
+
+        tableBody.innerHTML = '';
+        tableBody.appendChild(fragment);
+
+        fragment.innerHTML = '';
+
+        const response = await fetch(`api/sportCategories/sportCategory/${category.id}/matches`);
+        if (!response.ok) {
+            throw new Error('Ошибка при выполнении запроса');
+        }
+        const matches = await response.json();
+        for (const match of matches) {
+            const row = document.createElement('tr');
+            row.classList.add('data-row');
+            row.dataset.id = match.id;
+            fragment.appendChild(row);
+            row.dataset.tournamentId = tournamentId;
+            row.dataset.sportCategoryId = category.id;
+            row.dataset.sportsmen = match.rivals;
+            const matchSportsmen = match.rivals;
+            const firstSportsmanData = await getSportsmanData(matchSportsmen[0]);
+            const secondSportsmanData = await getSportsmanData(matchSportsmen[1]);
+            row.dataset.number = match.number;
+            const number = match.number;
+            const count = await getSportsmenCount(category.id);
+            const round = await getRound(number, count);
+            row.innerHTML = `
+                                                <td data-sportsman-id="${matchSportsmen[0]}">${firstSportsmanData.lastName} ${firstSportsmanData.firstName} ${firstSportsmanData.patronymic}</td>
+                                                <td data-sportsman-id="${matchSportsmen[1]}">${secondSportsmanData.lastName} ${secondSportsmanData.firstName} ${secondSportsmanData.patronymic}</td>
+                                                <td>${round}</td>
+                                            `;
+            row.addEventListener('click', handleRowClick);
+        }
+        tableBody.innerHTML = '';
+        tableBody.appendChild(fragment);
+    }
+    
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            await getAuthenticatedUser();
+            const urlParams = new URLSearchParams(window.location.search);
+            tournamentId = urlParams.get('id');
+            await getCategories();
+        }
+        catch (error) {
+            console.log('Ошибка при выполнении скрипта:', error);
+
+        }
+    });
+
+    async function handleRowClick(event) {
+        const matchRow = event.target.closest('.data-row');
+
+        const popup = document.createElement('div');
+        popup.className = 'popup';
+
+        const buttons = document.createElement('div');
+        buttons.className = 'popup-buttons';
+
+        const sportsmenSelect = document.createElement('select');
+        sportsmenSelect.className = 'select-match';
+
+        const sportsmen = matchRow.dataset.sportsmen.split(',');
+        for (const sportsmanId of sportsmen) {
+            const option = document.createElement('option');
+            const sportsman = await getSportsmanData(sportsmanId);
+            option.value = sportsmanId;
+            option.textContent = sportsman.lastName + " " + sportsman.firstName + " " + sportsman.patronymic;
+            sportsmenSelect.appendChild(option);
+        }
+
+
+        
+        const acceptButton = document.createElement('button');
+        acceptButton.textContent = 'Подтвердить';
+        acceptButton.className = 'green-button';
+        acceptButton.addEventListener('click', function () {handleAcceptButtonClick(event, sportsmenSelect, matchRow);});
+
+        const cancelButton = document.createElement('button');
+        cancelButton.textContent = 'Отмена';
+        cancelButton.className = 'blue-button';
+        cancelButton.addEventListener('click', handleCancelButtonClick);
+
+        buttons.appendChild(sportsmenSelect);
+        buttons.appendChild(acceptButton);
+        buttons.appendChild(cancelButton);
+        popup.appendChild(buttons);
+
+        popup.style.position = 'fixed';
+        popup.style.top = '50%';
+        popup.style.left = '50%';
+        popup.style.transform = 'translate(-50%, -50%)';
+        popup.classList.add('active');
+        const overlay = document.querySelector('.overlay');
+        overlay.classList.add('active');
+
+        document.body.appendChild(popup);
+    }
+
+    function handleAcceptButtonClick(event, sportsmenSelect, matchRow) {
+        const selectedOption = sportsmenSelect.options[sportsmenSelect.selectedIndex];
+        const selectedSportsmanId = selectedOption.value;
+        const uri = '/api/matchresults';
+        const currentDate = new Date();
+        const matchResult = {
+            "date": currentDate.toLocaleDateString() + ' ' + currentDate.toLocaleTimeString(),
+            "round": matchRow.cells[2].textContent.trim(),
+            "tournamentResultId": tournamentId,
+            "matchId": matchRow.dataset.id,
+            "winnerId": selectedSportsmanId
+        };
+        postData(uri, matchResult);
+        const sportsmanCell = matchRow.querySelector(`td[data-sportsman-id="${selectedSportsmanId}"]`);
+        sportsmanCell.style.fontWeight = 'bold';
+        const popup = document.querySelector('.popup');
+        const overlay = document.querySelector('.overlay');
+        popup.remove();
+        overlay.classList.remove('active');
+        event.stopPropagation();
+    }
+
+    function handleCancelButtonClick(event) {
+        const popup = document.querySelector('.popup');
+        const overlay = document.querySelector('.overlay');
+        popup.remove();
+        overlay.classList.remove('active');
+        event.stopPropagation();
+    }
+    
+    async function showTable() {
+        const categoryId = parseInt(document.getElementById('category').value);
+        const tableContainer = document.querySelector('.table-container');
+        tableContainer.style.display = 'block';
+        await displayCategory(categoryId);
+    }
+
+    const postData = async (url = '', data = {}) => {
+        try {
+            response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                const errorMessage = await response.text();
+                alert(errorMessage);
+            }
+            else {
+                const result = await response.json();
+                console.log(result);
+            }
+        } catch(error) {
+            alert('Произошла ошибка! ' + error + ' Попробуйте ещё раз.');
+        }
+    };
+    
+    async function saveResults() {
+        
+    }
+</script>
+</body>
+</html>

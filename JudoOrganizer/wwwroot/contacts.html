@@ -1,0 +1,47 @@
+﻿
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Contacts</title>
+    <link rel="stylesheet" type="text/css" href="css/styles.css" />
+</head>
+<body>
+    <header>
+        <h1 onclick="location.reload();">Judo Organizer</h1>
+    </header>
+    <nav>
+        <ul>
+            <li><a href="index_coach.html">Главная</a></li>
+            <li><a href="club_info.html">Клуб</a></li>
+            <li><a href="tournaments_table_for_coach.html">Турниры</a></li>
+            <li><a href="change_coach_info.html">Профиль</a></li>
+            <li><a href="contacts.html">Контакты</a></li>
+        </ul>
+    </nav>
+    <section class="hero">
+        <h2>Наши контакты</h2>
+    </section>
+    <footer>
+        <p>&copy; 2023 МОУ ДО "СДЮШОР борьбы и бокса" г. Тирасполь. Все права защищены.</p>
+    </footer>
+    <script>
+        fetch('/api/Users/IsAuthenticated')
+            .then(response => {
+                if (response.ok) {
+                    return fetch('/api/Users/GetCurrentUserRole');
+                } else {
+                    window.location.href = 'unauthorized.html';
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                var role = data.role;
+
+                if (role !== 'Coach') {
+                    window.location.href = 'unauthorized.html';
+                }
+            })
+    </script>
+</body>
+</html>

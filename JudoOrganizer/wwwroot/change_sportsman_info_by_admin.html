@@ -1,0 +1,295 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Изменить спортсмена</title>
+    <link rel="stylesheet" type="text/css" href="css/authStyle.css" />
+</head>
+<body>
+<header>
+    <h1 onclick="location.reload();">Judo Organizer</h1>
+</header>
+<div class="container">
+    <div class="form-group">
+        <h2>Информация о спортсмене</h2>
+        <div class="form-group">
+            <label for="lastName">Фамилия:</label>
+            <input type="text" id="lastName" placeholder="Фамилия" required>
+        </div>
+        <div class="form-group">
+            <label for="firstName">Имя:</label>
+            <input type="text" id="firstName" placeholder="Имя" required>
+        </div>
+        <div class="form-group">
+            <label for="patronymic">Отчество:</label>
+            <input type="text" id="patronymic" placeholder="Отчество">
+        </div>
+        <div class="form-group">
+            <label for="dateOfBirth">Год рождения:</label>
+            <input type="number" id="dateOfBirth" placeholder="Год рождения" required>
+        </div>
+        <div class="form-group">
+            <label for="sex">Пол:</label>
+            <select id="sex" name="sex" required>
+                <option value="" disabled selected>Выберите пол</option>
+                <option value="Мужской">Мужской</option>
+                <option value="Женский">Женский</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="club">Клуб:</label>
+            <select id="club" name="club" required onchange="getCoachesByClub()">
+                <option value="" disabled selected>Выберите клуб</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="coach">Тренер:</label>
+            <select id="coach" name="coach" required>
+                <option value="" disabled selected>Выберите тренера</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <button onclick="sendPutRequest()">Подтвердить</button>
+        </div>
+        <div class="form-group">
+            <button onclick="cancel()">Отменить</button>
+        </div>
+    </div>
+</div>
+<footer>
+    <p>&copy; 2023 МОУ ДО "СДЮШОР борьбы и бокса" г. Тирасполь. Все права защищены.</p>
+</footer>
+<script>
+    let sportsmanId;
+    async function getAuthenticatedUser() {
+        try {
+            const response = await fetch('/api/Users/IsAuthenticated')
+            if (!response.ok) {
+                throw new Error('Ошибка при проверке аутентификации пользователя');
+            }
+
+            const roleResponse = await fetch('/api/Users/GetCurrentUserRole');
+            if (!roleResponse.ok) {
+                throw new Error('Ошибка при получении роли пользователя');
+            }
+
+            const roleData = await roleResponse.json();
+            const role = roleData.role;
+
+            if (role !== 'Admin') {
+                window.location.href = 'unauthorized.html';
+            }
+        }
+        catch (error) {
+            console.log('Ошибка при получении информации об аутентификации пользователя:', error);
+            window.location.href = 'unauthorized.html';
+        }
+    }
+    
+    async function getCoachesByClub() {
+        try {
+            const clubId = document.getElementById('club').value;
+            const coachSelect = document.getElementById('coach');
+            coachSelect.innerHTML = '<option value="" disabled selected>Выберите тренера</option>'; 
+            
+            const response = await fetch(`/api/clubs/club/${clubId}/coaches`)
+            if (!response.ok) {
+                throw new Error('Ошибка при получении списка тренеров');
+            }
+
+            const coaches = await response.json();
+            coaches.forEach(coach => {
+                const option = document.createElement('option');
+                option.value = coach.id;
+                option.text = coach.lastName + " " + coach.firstName + " " + coach.patronymic;
+                coachSelect.appendChild(option);
+            });
+        }
+        catch (error) {
+            console.log('Ошибка при получении списка тренеров:', error);
+        }
+    }
+    
+    function sendPutRequest() {
+        const updatedLastName = document.getElementById('lastName').value;
+        const updatedFirstName = document.getElementById('firstName').value;
+        const updatedPatronymic = document.getElementById('patronymic').value;
+        const updatedDateOfBirth = document.getElementById('dateOfBirth').value;
+        const updatedSex = document.getElementById('sex').value;
+        const updatedClub = document.getElementById('club').value;
+        const updatedCoach = document.getElementById('coach').value;
+
+        if (!updatedLastName || !updatedFirstName || !updatedPatronymic || !updatedDateOfBirth || !updatedSex || !updatedClub || !updatedCoach) {
+            alert('Заполните все поля!');
+            return;
+        }
+        const textRegex = /^[A-Za-zА-Яа-яЁё\s]*$/;
+        const dateOfBirthRegex = /^(19|20)\d{2}$/;
+        if (!textRegex.test(updatedLastName) || !textRegex.test(updatedFirstName) || !textRegex.test(updatedPatronymic)) {
+            alert("Недопустимый формат текстового ввода!");
+            return;
+        }
+        if (!dateOfBirthRegex.test(updatedDateOfBirth)) {
+            alert("Неправильный формат года рождения!");
+            return;
+        }
+        
+        const updatedSportsman = {
+            id: sportsmanId,
+            lastName: updatedLastName,
+            firstName: updatedFirstName,
+            patronymic: updatedPatronymic,
+            dateOfBirth: updatedDateOfBirth,
+            sex: updatedSex,
+            clubId: parseInt(updatedClub),
+            coachId: parseInt(updatedCoach)
+        };
+        
+        fetch('api/sportsmen', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(updatedSportsman)
+        })
+            .then(response => {
+                if (response.ok) {
+                    alert('Данные спортсмена успешно обновлены!');
+                    window.location.href = 'sportsmen_table.html';
+                } else {
+                    alert('Произошла ошибка при обновлении данных спортсмена.');
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка при выполнении PUT-запроса:', error);
+            });
+    }
+
+    function cancel() {
+        window.location.href = 'sportsmen_table.html';
+    }
+
+    async function getAllClubs() {
+        try {
+            const response = await fetch('/api/clubs');
+            if (!response.ok) {
+                throw new Error('Ошибка при получении списка клубов');
+            }
+            const clubsData = await response.json();
+            return clubsData;
+        } catch (error) {
+            console.log('Ошибка при получении списка клубов:', error);
+            return [];
+        }
+    }
+
+    async function getClubData(clubId) {
+        try {
+            const response = await fetch(`/api/clubs/club/${clubId}`);
+            if (!response.ok) {
+                throw new Error('Ошибка при получении информации о клубе');
+            }
+            const club = await response.json();
+            const clubSelect = document.getElementById('club');
+            const options = clubSelect.options;
+            for (let i = 0; i < options.length; i++) {
+                if (options[i].value === club.id.toString()) {
+                    options[i].selected = true;
+                    break;
+                }
+            }
+        } catch (error) {
+            console.log('Ошибка при получении информации о клубе:', error);
+        }
+    }
+
+    async function getAllCoaches(clubId) {
+        try {
+            const response = await fetch(`/api/clubs/club/${clubId}/coaches`);
+            if (!response.ok) {
+                throw new Error('Ошибка при получении списка тренеров');
+            }
+            const coachesData = await response.json();
+            return coachesData;
+        } catch (error) {
+            console.log('Ошибка при получении списка тренеров:', error);
+            return [];
+        }
+    }
+
+    async function getCoachData(coachId) {
+        try {
+            const response = await fetch(`/api/coaches/coach/${coachId}`);
+            if (!response.ok) {
+                throw new Error('Ошибка при получении информации о тренере');
+            }
+            const coach = await response.json();
+            const coachSelect = document.getElementById('coach');
+            const options = coachSelect.options;
+            for (let i = 0; i < options.length; i++) {
+                if (options[i].value === coach.id.toString()) {
+                    options[i].selected = true;
+                    break;
+                }
+            }
+        } catch (error) {
+            console.log('Ошибка при получении информации о тренере:', error);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            await getAuthenticatedUser();
+            const urlParams = new URLSearchParams(window.location.search);
+            sportsmanId = urlParams.get('id');
+            const sportsmanClubId = urlParams.get('clubId');
+            const sportsmanCoachId = urlParams.get('coachId');
+            const lastName = urlParams.get('lastName');
+            const firstName = urlParams.get('firstName');
+            const patronymic = urlParams.get('patronymic');
+            const dateOfBirth = urlParams.get('dateOfBirth');
+            const sex = urlParams.get('sex');
+
+            document.getElementById('lastName').value = lastName;
+            document.getElementById('firstName').value = firstName;
+            document.getElementById('patronymic').value = patronymic;
+            document.getElementById('dateOfBirth').value = dateOfBirth;
+            document.getElementById('sex').value = sex;
+
+
+            const clubs = await getAllClubs();
+            const clubSelect = document.getElementById('club');
+            clubSelect.innerHTML = '';
+            clubs.forEach((club) => {
+                const option = document.createElement('option');
+                option.value = club.id;
+                option.textContent = club.name;
+                if (club.id === sportsmanClubId) {
+                    option.selected = true;
+                }
+                clubSelect.appendChild(option);
+            });
+            await getClubData(sportsmanClubId);
+
+            const coaches = await getAllCoaches(sportsmanClubId);
+            const coachSelect = document.getElementById('coach');
+            coachSelect.innerHTML = '';
+            coaches.forEach((coach) => {
+                const option = document.createElement('option');
+                option.value = coach.id;
+                option.textContent = coach.lastName + " " + coach.firstName + " " + coach.patronymic;
+                if (coach.id === sportsmanCoachId) {
+                    option.selected = true;
+                }
+                coachSelect.appendChild(option);
+            });
+            await getCoachData(sportsmanCoachId);
+        }
+        catch (error) {
+            console.log('Ошибка при выполнении скрипта:', error);
+
+        }
+    });
+</script>
+</body>
+</html>

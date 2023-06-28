@@ -1,0 +1,284 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Информация о клубе</title>
+    <link rel="stylesheet" type="text/css" href="css/styles.css" />
+</head>
+<body>
+    <header>
+        <h1 onclick="location.reload();">Judo Organizer</h1>
+    </header>
+    <nav>
+        <ul>
+            <li><a href="index_coach.html">Главная</a></li>
+            <li><a href="club_info.html">Клуб</a></li>
+            <li><a href="tournaments_table_for_coach.html">Турниры</a></li>
+            <li><a href="change_coach_info.html">Профиль</a></li>
+            <li><a href="contacts.html">Контакты</a></li>
+        </ul>
+    </nav>
+    <div class="container">
+        <h2 id="clubName">Клуб: </h2>
+        <h2 id="coachName">Тренер: </h2>
+        <div class="form-group">
+            <button onclick="addSportsman()">Добавить спортсмена</button>
+        </div>
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Фамилия</th>
+                    <th>Имя</th>
+                    <th>Отчество</th>
+                    <th>Год рождения</th>
+                    <th>Пол</th>
+                </tr>
+            </thead>
+            <tbody id="sportsmanTableBody"></tbody>
+        </table>
+    </div>
+    <div class="overlay"></div>
+    <footer>
+        <p>&copy; 2023 МОУ ДО "СДЮШОР борьбы и бокса" г. Тирасполь. Все права защищены.</p>
+    </footer>
+    <script>
+        let userId;
+        let coachId;
+        let clubId;
+        async function getAuthenticatedUser() {
+            try {
+                const response = await fetch('/api/Users/IsAuthenticated')
+                if (!response.ok) {
+                    throw new Error('Ошибка при проверке аутентификации пользователя');
+                }
+
+                const roleResponse = await fetch('/api/Users/GetCurrentUserRole');
+                if (!roleResponse.ok) {
+                    throw new Error('Ошибка при получении роли пользователя');
+                }
+
+                const roleData = await roleResponse.json();
+                const role = roleData.role;
+
+                if (role !== 'Coach') {
+                    window.location.href = 'unauthorized.html';
+                }
+
+                const idResponse = await fetch('/api/Users/GetCurrentUserId');
+                if (!idResponse.ok) {
+                    throw new Error('Ошибка при получении id пользователя');
+                }
+
+                const idData = await idResponse.json();
+                userId = idData.id;
+            }
+            catch (error) {
+                console.log('Ошибка при получении информации об аутентификации пользователя:', error);
+                window.location.href = 'unauthorized.html';
+            }
+        }
+
+        async function getCoachByUserId(userId) {
+            try {
+                const response = await fetch(`/api/coaches/coachbyuserid/${userId}`);
+                if (!response.ok) {
+                    throw new Error('Ошибка при получении информации о тренере');
+                }
+                const coachData = await response.json();
+                document.getElementById('coachName').textContent += coachData.lastName + " " + coachData.firstName + " " + coachData.patronymic;
+                return coachData;
+            } catch (error) {
+                console.log('Ошибка при получении информации о тренере:', error);
+                return null;
+            }
+        }
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            getAuthenticatedUser()
+                .then(() => {
+                    return getCoachByUserId(userId);
+                })
+                .then(coach => {
+                    if (coach) {
+                        coachId = coach.id;
+                        clubId = coach.clubId;
+                        getClubName();
+                        getSportsmen();
+                    } else {
+                        console.log('Тренер не найден');
+                    }
+                })
+                .catch(error => {
+                    console.log('Ошибка при выполнении скрипта:', error);
+                    window.location.href = 'unauthorized.html';
+                });
+        });
+
+        async function getClubName() {
+            try {
+                const response = await fetch(`api/clubs/club/${clubId}`);
+                if (!response.ok) {
+                    throw new Error('Ошибка при выполнении запроса');
+                }
+                const club = await response.json();
+                document.getElementById('clubName').textContent += club.name;
+            } catch (error) {
+                console.error('Произошла ошибка:', error);
+            }
+        }
+
+        async function getSportsmen() {
+            try {
+                const response = await fetch(`api/coaches/coach/${coachId}/sportsmen`);
+                if (!response.ok) {
+                    throw new Error('Ошибка при выполнении запроса');
+                }
+                const sportsmen = await response.json();
+                displaySportsmen(sportsmen);
+            } catch (error) {
+                console.error('Произошла ошибка:', error);
+            }
+        }
+
+        function displaySportsmen(sportsmen) {
+            const tableBody = document.getElementById('sportsmanTableBody');
+            tableBody.innerHTML = '';
+
+            sportsmen.forEach(sportsman => {
+                const row = document.createElement('tr');
+                row.classList.add('data-row');
+                row.dataset.id = sportsman.id;
+                row.dataset.clubId = clubId;
+                row.dataset.coachId = coachId;
+                row.innerHTML = `
+                                                <td>${sportsman.lastName}</td>
+                                                <td>${sportsman.firstName}</td>
+                                                <td>${sportsman.patronymic}</td>
+                                                <td>${sportsman.dateOfBirth}</td>
+                                                <td>${sportsman.sex}</td>
+                                            `;
+                row.addEventListener('click', handleRowClick);
+                tableBody.appendChild(row);
+            });
+        }
+
+        function addSportsman() {
+            window.location.href = 'add_sportsman.html';
+        }
+
+        function handleRowClick(event) {
+            const sportsmanRow = event.target.closest('.data-row');
+            
+            const popup = document.createElement('div');
+            popup.className = 'popup';
+
+            const buttons = document.createElement('div');
+            buttons.className = 'popup-buttons';
+
+            const editButton = document.createElement('button');
+            editButton.textContent = 'Изменить';
+            editButton.className = 'green-button';
+            editButton.addEventListener('click', function () { handleEditButtonClick(event, sportsmanRow); });
+
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Удалить';
+            deleteButton.className = 'red-button';
+            deleteButton.addEventListener('click', function () { handleDeleteButtonClick(event, sportsmanRow); });
+
+            const cancelButton = document.createElement('button');
+            cancelButton.textContent = 'Отмена';
+            cancelButton.className = 'blue-button';
+            cancelButton.addEventListener('click', handleCancelButtonClick);
+
+            buttons.appendChild(editButton);
+            buttons.appendChild(deleteButton);
+            buttons.appendChild(cancelButton);
+            popup.appendChild(buttons);
+
+            popup.style.position = 'fixed';
+            popup.style.top = '50%';
+            popup.style.left = '50%';
+            popup.style.transform = 'translate(-50%, -50%)';
+            popup.classList.add('active');
+            const overlay = document.querySelector('.overlay');
+            overlay.classList.add('active');
+
+            document.body.appendChild(popup);
+        }
+
+
+        function handleEditButtonClick(event, sportsmanRow) {
+            if (sportsmanRow) {
+                const sportsmanData = {
+                    id: sportsmanRow.dataset.id,
+                    clubId: sportsmanRow.dataset.clubId,
+                    coachId: sportsmanRow.dataset.coachId,
+                    lastName: sportsmanRow.cells[0].textContent.trim(),
+                    firstName: sportsmanRow.cells[1].textContent.trim(),
+                    patronymic: sportsmanRow.cells[2].textContent.trim(),
+                    dateOfBirth: sportsmanRow.cells[3].textContent.trim(),
+                    sex: sportsmanRow.cells[4].textContent.trim()
+                };
+
+                const url = new URL('change_sportsman_info.html', window.location.href);
+                url.searchParams.set('id', sportsmanData.id);
+                url.searchParams.set('clubId', sportsmanData.clubId);
+                url.searchParams.set('coachId', sportsmanData.coachId);
+                url.searchParams.set('lastName', sportsmanData.lastName);
+                url.searchParams.set('firstName', sportsmanData.firstName);
+                url.searchParams.set('patronymic', sportsmanData.patronymic);
+                url.searchParams.set('dateOfBirth', sportsmanData.dateOfBirth);
+                url.searchParams.set('sex', sportsmanData.sex);
+                window.location.href = url.href;
+            }
+            else {
+                console.log('Error!');
+            }
+            event.stopPropagation();
+        }
+
+        function handleDeleteButtonClick(event, sportsmanRow) {
+            if (sportsmanRow) {
+                const sportsmanId = sportsmanRow.dataset.id;
+                deleteSportsman(sportsmanId)
+                    .then(() => {
+                        alert('Спортсмен успешно удален!');
+                        const popup = document.querySelector('.popup');
+                        const overlay = document.querySelector('.overlay');
+                        popup.remove();
+                        overlay.classList.remove('active');
+                        sportsmanRow.remove();
+                    })
+                    .catch(error => {
+                        console.error('Ошибка при удалении спортсмена:', error);
+                    });
+            }
+            event.stopPropagation();
+        }
+
+        async function deleteSportsman(sportsmanId) {
+            try {
+                const response = await fetch(`/api/Sportsmen/DeleteSportsman/${sportsmanId}`, {
+                    method: 'DELETE'
+                });
+                if (!response.ok) {
+                    throw new Error('Ошибка при выполнении запроса');
+                }
+            } catch (error) {
+                throw new Error('Ошибка при удалении спортсмена: ' + error.message);
+            }
+        }
+
+        function handleCancelButtonClick(event) {
+            const popup = document.querySelector('.popup');
+            const overlay = document.querySelector('.overlay');
+            popup.remove();
+            overlay.classList.remove('active');
+            event.stopPropagation();
+        }
+    </script>
+</body>
+</html>

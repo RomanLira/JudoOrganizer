@@ -1,0 +1,102 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Регистрация</title>
+    <link rel="stylesheet" type="text/css" href="css/authStyle.css" />
+</head>
+<body>
+    <header>
+        <h1 onclick="location.reload();">Judo Organizer</h1>
+    </header>
+    <div class="container">
+        <div class="form-group">
+            <h2>Регистрация</h2>
+            <div class="form-group">
+                <input type="hidden" id="Id" />
+            </div>
+            <div class="form-group">
+                <label for="login">Логин:</label>
+                <input type="text" id="login" name="login" placeholder="Введите логин" required />
+            </div>
+            <div class="form-group">
+                <label for="email">Эл. почта:</label>
+                <input type="email" id="email" name="email" placeholder="example@example.com" required/>
+            </div>
+            <div class="form-group">
+                <input type="hidden" id="role" />
+            </div>
+            <div class="form-group">
+                <label for="password">Пароль:</label>
+                <input type="password" id="password" name="password" placeholder="Введите пароль" required/>
+            </div>
+            <div class="form-group">
+                <button id="saveBtn" onclick="sendPostRequest()">Сохранить</button>
+            </div>
+        </div>
+    </div>
+        <footer>
+            <p>&copy; 2023 МОУ ДО "СДЮШОР борьбы и бокса" г. Тирасполь. Все права защищены.</p>
+        </footer>
+        <script>
+            const uri = 'api/users';
+
+            const postData = async (url = '', data = {}) => {
+                try {
+                    response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            "Accept": "application/json",
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    if (!response.ok) {
+                        const errorMessage = await response.text();
+                        alert(errorMessage);
+                    }
+                    else {
+                        const result = await response.json();
+                        console.log(result);
+                        window.location.href = "add_coach.html";
+                    }
+                } catch (error) {
+                    alert('Произошла ошибка! ' + error + ' Попробуйте ещё раз.');
+                }
+                reset();
+            };
+
+            function sendPostRequest() {
+                const emailInput = document.getElementById("email");
+
+                const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                const email = emailInput.value;
+
+                if (!emailRegex.test(email)) {
+                    alert("Неправильный формат эл. почты");
+                    return;
+                }
+
+                const login = document.getElementById("login").value;
+                const password = document.getElementById("password").value;
+                if (!login || !email || !password) {
+                    alert('Заполните все поля!');
+                    return;
+                }
+                const user = {
+                    "login": login,
+                    "email": email,
+                    "password": password
+                };
+                postData(uri, user);
+            }
+
+            function reset() {
+                document.getElementById("login").value =
+                    document.getElementById("email").value =
+                    document.getElementById("password").value = "";
+            }
+        </script>
+</body>
+</html>

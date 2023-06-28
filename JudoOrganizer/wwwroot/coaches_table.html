@@ -1,0 +1,199 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Тренеры</title>
+    <link rel="stylesheet" type="text/css" href="css/styles.css" />
+</head>
+<body>
+<header>
+    <h1 onclick="location.reload();">Judo Organizer</h1>
+</header>
+<nav>
+    <ul>
+        <li><a href="index.html">Главная</a></li>
+        <li><a href="clubs_table.html">Клубы</a></li>
+        <li><a href="sportsmen_table.html">Спортсмены</a></li>
+        <li><a href="coaches_table.html">Тренеры</a></li>
+        <li><a href="tournaments_table.html">Турниры</a></li>
+    </ul>
+</nav>
+<div class="table-container">
+    <table>
+        <thead>
+        <tr>
+            <th>Фамилия</th>
+            <th>Имя</th>
+            <th>Отчество</th>
+            <th>Телефон</th>
+            <th>Клуб</th>
+        </tr>
+        </thead>
+        <tbody id="coachTableBody"></tbody>
+    </table>
+</div>
+<div class="overlay"></div>
+<footer>
+    <p>&copy; 2023 МОУ ДО "СДЮШОР борьбы и бокса" г. Тирасполь. Все права защищены.</p>
+</footer>
+<script>
+    async function getAuthenticatedUser() {
+        try {
+            const response = await fetch('/api/Users/IsAuthenticated')
+            if (!response.ok) {
+                throw new Error('Ошибка при проверке аутентификации пользователя');
+            }
+
+            const roleResponse = await fetch('/api/Users/GetCurrentUserRole');
+            if (!roleResponse.ok) {
+                throw new Error('Ошибка при получении роли пользователя');
+            }
+
+            const roleData = await roleResponse.json();
+            const role = roleData.role;
+
+            if (role !== 'Admin') {
+                window.location.href = 'unauthorized.html';
+            }
+        }
+        catch (error) {
+            console.log('Ошибка при получении информации об аутентификации пользователя:', error);
+            window.location.href = 'unauthorized.html';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        getAuthenticatedUser()
+            .then(() => {
+                return getCoaches();
+            })
+            .catch(error => {
+                console.log('Ошибка при выполнении скрипта:', error);
+                window.location.href = 'unauthorized.html';
+            });
+    });
+
+    async function getClubName(clubId) {
+        try {
+            const response = await fetch(`api/clubs/club/${clubId}`);
+            if (!response.ok) {
+                throw new Error('Ошибка при выполнении запроса');
+            }
+            const club = await response.json();
+            return club.name;
+        } catch (error) {
+            console.error('Произошла ошибка:', error);
+            return '';
+        }
+    }
+
+    async function getCoaches() {
+        try {
+            const response = await fetch(`api/Coaches`);
+            if (!response.ok) {
+                throw new Error('Ошибка при выполнении запроса');
+            }
+            const coaches = await response.json();
+            displayCoaches(coaches);
+        } catch (error) {
+            console.error('Произошла ошибка:', error);
+        }
+    }
+
+    async function displayCoaches(coaches) {
+        const tableBody = document.getElementById('coachTableBody');
+        tableBody.innerHTML = '';
+
+        for(const coach of coaches) {
+            const row = document.createElement('tr');
+            row.classList.add('data-row');
+            row.dataset.id = coach.id;
+            row.dataset.clubId = coach.clubId;
+            const clubName = await getClubName(coach.clubId);
+            row.innerHTML = `
+                                            <td>${coach.lastName}</td>
+                                            <td>${coach.firstName}</td>
+                                            <td>${coach.patronymic}</td>
+                                            <td>${coach.phone}</td>
+                                            <td>${clubName}</td>
+                                        `;
+            row.addEventListener('click', handleRowClick);
+            tableBody.appendChild(row);
+        }
+    }
+
+    function handleRowClick(event) {
+        const coachRow = event.target.closest('.data-row');
+        const popup = document.createElement('div');
+        popup.className = 'popup';
+
+        const buttons = document.createElement('div');
+        buttons.className = 'popup-buttons';
+
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Удалить';
+        deleteButton.className = 'red-button';
+        deleteButton.addEventListener('click', function () {handleDeleteButtonClick(event, coachRow);});
+
+        const cancelButton = document.createElement('button');
+        cancelButton.textContent = 'Отмена';
+        cancelButton.className = 'blue-button';
+        cancelButton.addEventListener('click', handleCancelButtonClick);
+        
+        buttons.appendChild(deleteButton);
+        buttons.appendChild(cancelButton);
+        popup.appendChild(buttons);
+
+        popup.style.position = 'fixed';
+        popup.style.top = '50%';
+        popup.style.left = '50%';
+        popup.style.transform = 'translate(-50%, -50%)';
+        popup.classList.add('active');
+        const overlay = document.querySelector('.overlay');
+        overlay.classList.add('active');
+
+        document.body.appendChild(popup);
+    }
+
+    function handleDeleteButtonClick(event, coachRow) {
+        if (coachRow) {
+            const coachId = coachRow.dataset.id;
+            deleteCoach(coachId)
+                .then(() => {
+                    alert('Тренер успешно удален!');
+                    const popup = document.querySelector('.popup');
+                    const overlay = document.querySelector('.overlay');
+                    popup.remove();
+                    overlay.classList.remove('active');
+                    coachRow.remove();
+                })
+                .catch(error => {
+                    console.error('Ошибка при удалении тренера:', error);
+                });
+        }
+        event.stopPropagation();
+    }
+
+    async function deleteCoach(coachId) {
+        try {
+            const response = await fetch(`/api/Coaches/DeleteCoach/${coachId}`, {
+                method: 'DELETE'
+            });
+            if (!response.ok) {
+                throw new Error('Ошибка при выполнении запроса');
+            }
+        } catch (error) {
+            throw new Error('Ошибка при удалении тренера: ' + error.message);
+        }
+    }
+
+    function handleCancelButtonClick(event) {
+        const popup = document.querySelector('.popup');
+        const overlay = document.querySelector('.overlay');
+        popup.remove();
+        overlay.classList.remove('active');
+        event.stopPropagation();
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Создать турнир</title>
+    <link rel="stylesheet" type="text/css" href="css/authStyle.css" />
+</head>
+<body>
+<header>
+    <h1 onclick="location.reload();">Judo Organizer</h1>
+</header>
+
+<div class="container">
+    <div id="form-group" class="form-group">
+        <h2>Информация о турнире</h2>
+        <div class="form-group">
+            <label for="name">Название:</label>
+            <input type="text" id="name" placeholder="Название" required>
+        </div>
+        <div class="form-group">
+            <label for="organizer">Организатор:</label>
+            <input type="text" id="organizer" placeholder="Организатор" required>
+        </div>
+        <div class="form-group">
+            <label for="place">Место:</label>
+            <input type="text" id="place" placeholder="Место">
+        </div>
+        <div class="form-group">
+            <label for="date">Дата и время:</label>
+            <input type="text" id="date" placeholder="дд.мм.гггг час:мин" required>
+        </div>
+        <div class="form-group">
+            <button onclick="sendPostRequest()">Подтвердить</button>
+        </div>
+        <div class="form-group">
+            <button onclick="cancel()">Отменить</button>
+        </div>
+    </div>
+</div>
+<footer>
+    <p>&copy; 2023 МОУ ДО "СДЮШОР борьбы и бокса" г. Тирасполь. Все права защищены.</p>
+</footer>
+<script>
+    async function getAuthenticatedUser() {
+        try {
+            const response = await fetch('/api/Users/IsAuthenticated')
+            if (!response.ok) {
+                throw new Error('Ошибка при проверке аутентификации пользователя');
+            }
+
+            const roleResponse = await fetch('/api/Users/GetCurrentUserRole');
+            if (!roleResponse.ok) {
+                throw new Error('Ошибка при получении роли пользователя');
+            }
+
+            const roleData = await roleResponse.json();
+            const role = roleData.role;
+
+            if (role !== 'Admin') {
+                window.location.href = 'unauthorized.html';
+            }
+        }
+        catch (error) {
+            console.log('Ошибка при получении информации об аутентификации пользователя:', error);
+            window.location.href = 'unauthorized.html';
+        }
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+        getAuthenticatedUser();
+    });
+
+    const uri = 'api/tournaments';
+    const postData = async (url = '', data = {}) => {
+        try {
+            response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                const errorMessage = await response.text();
+                alert('Ошибка: ' + errorMessage);
+            }
+            else {
+                const result = await response.json();
+                console.log(result);
+                window.location.href = `add_sport_categories_for_tournament.html?id=${result.id}`;
+            }
+        } catch(error) {
+            alert('Произошла ошибка! ' + error + ' Попробуйте ещё раз.');
+        }
+        reset();
+    };
+
+    function sendPostRequest() {
+        const name = document.getElementById("name").value;
+        const organizer = document.getElementById("organizer").value;
+        const place = document.getElementById('place').value;
+        const date = document.getElementById('date').value;
+        if (!name || !organizer || !place || !date) {
+            alert('Заполните все поля!');
+            return;
+        }
+        
+        const dateRegex = /^(0[0-9]|1[0-9]|2[0-3])\.(0[0-9]|1[0-9]|2[0-3])\.(20[0-9]{2})\s(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9])$/;
+        if (!dateRegex.test(date)) {
+            alert("Неправильный формат даты!");
+            return;
+        }
+        const tournament =
+            {
+                "name": name,
+                "organizer": organizer,
+                "place": place,
+                "date": date
+        };
+        postData(uri, tournament);
+    }
+
+    function reset() {
+        document.getElementById("name").value =
+            document.getElementById("organizer").value =
+                document.getElementById("place").value =
+                    document.getElementById("date").value = "";
+    }
+
+    function cancel() {
+        window.location.href = 'tournaments_table.html';
+    }
+</script>
+</body>
+</html>

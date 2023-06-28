@@ -1,0 +1,348 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Таблица регистрации</title>
+    <link rel="stylesheet" type="text/css" href="css/styles.css" />
+</head>
+<body>
+    <header>
+        <h1 onclick="location.reload();">Judo Organizer</h1>
+    </header>
+    <nav>
+        <ul>
+            <li><a href="index.html">Главная</a></li>
+            <li><a href="clubs_table.html">Клубы</a></li>
+            <li><a href="sportsmen_table.html">Спортсмены</a></li>
+            <li><a href="coaches_table.html">Пользователи</a></li>
+            <li><a href="tournaments_table.html">Турниры</a></li>
+        </ul>
+    </nav>
+    <div class="container">
+        <div class="form-group">
+            <h2 id="tournamentName"></h2>
+            <h2 id="tournamentDate"></h2>
+        </div>
+        <button class="red-button" onclick="endRegistration()">Завершить регистрацию</button>
+        <button class="green-button" onclick="goToWeighing()" style="display: none;">Перейти к взвешиванию</button>
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Фамилия</th>
+                    <th>Имя</th>
+                    <th>Отчество</th>
+                    <th>Клуб</th>
+                    <th>Пол</th>
+                    <th>Год рождения</th>
+                    <th>Весовая категория</th>
+                    <th>Дата регистрации</th>
+                </tr>
+            </thead>
+            <tbody id="registrationTableBody"></tbody>
+        </table>
+        <div id="pagination">
+            <button id="prevPageButton" onclick="loadPreviousPage()">Предыдущая страница</button>
+            <button id="nextPageButton" onclick="loadNextPage()">Следующая страница</button>
+        </div>
+    </div>
+    <div class="overlay"></div>
+    <footer>
+        <p>&copy; 2023 МОУ ДО "СДЮШОР борьбы и бокса" г. Тирасполь. Все права защищены.</p>
+    </footer>
+    <script>
+        let currentPageIndex = 1;
+        const pageSize = 10;
+
+        async function loadPreviousPage() {
+            if (currentPageIndex > 1) {
+                currentPageIndex--;
+                await displayRegistration(currentPageIndex, pageSize);
+            }
+        }
+
+        async function loadNextPage() {
+            currentPageIndex++;
+            await displayRegistration(currentPageIndex, pageSize);
+        }
+
+        
+        let tournamentId;
+        async function getAuthenticatedUser() {
+            try {
+                const response = await fetch('/api/Users/IsAuthenticated')
+                if (!response.ok) {
+                    throw new Error('Ошибка при проверке аутентификации пользователя');
+                }
+
+                const roleResponse = await fetch('/api/Users/GetCurrentUserRole');
+                if (!roleResponse.ok) {
+                    throw new Error('Ошибка при получении роли пользователя');
+                }
+
+                const roleData = await roleResponse.json();
+                const role = roleData.role;
+
+                if (role !== 'Admin') {
+                    window.location.href = 'unauthorized.html';
+                }
+            } catch (error) {
+                console.log('Ошибка при получении информации об аутентификации пользователя:', error);
+                window.location.href = 'unauthorized.html';
+            }
+        }
+
+        async function getSportsmanData(sportsmanId) {
+            try {
+                const response1 = await fetch(`api/sportsmen/sportsman/${sportsmanId}`);
+                if (!response1.ok) {
+                    throw new Error('Ошибка при выполнении запроса');
+                }
+                const sportsman = await response1.json();
+                clubId = sportsman.clubId;
+                const response2 = await fetch(`api/clubs/club/${clubId}`);
+                if (!response2.ok) {
+                    throw new Error('Ошибка при выполнении запроса');
+                }
+                const club = await response2.json();
+                const sportsmanData = {
+                    "lastName": sportsman.lastName,
+                    "firstName": sportsman.firstName,
+                    "patronymic": sportsman.patronymic,
+                    "clubName": club.name
+                };
+                return sportsmanData;
+            } catch (error) {
+                console.error('Произошла ошибка:', error);
+                return '';
+            }
+        }
+
+        async function getSportCategoryData(sportCategoryId) {
+            try {
+                const response1 = await fetch(`api/sportCategories/sportCategory/${sportCategoryId}`);
+                if (!response1.ok) {
+                    throw new Error('Ошибка при выполнении запроса');
+                }
+                const sportCategory = await response1.json();
+                const weightId = sportCategory.weightId;
+                const response2 = await fetch(`api/weights/weight/${weightId}`);
+                if (!response2.ok) {
+                    throw new Error('Ошибка при выполнении запроса');
+                }
+                const weight = await response2.json();
+                const sportCategoryData = {
+                    "sex": sportCategory.sex,
+                    "dateOfBirth": sportCategory.dateOfBirth,
+                    "weightValue": weight.weightValue
+                };
+                return sportCategoryData;
+            } catch (error) {
+                console.error('Произошла ошибка:', error);
+                return '';
+            }
+        }
+
+        async function getRegistration(pageIndex, pageSize) {
+            try {
+                const response = await fetch(`api/Tournaments/Tournament/${tournamentId}/Registration/${pageIndex}&${pageSize}`);
+                if (!response.ok) {
+                    throw new Error('Ошибка при выполнении запроса');
+                }
+                const registrations = await response.json();
+                return registrations;
+            } catch (error) {
+                console.error('Произошла ошибка:', error);
+            }
+        }
+
+        async function displayRegistration(pageIndex, pageSize) {
+            const registration = await getRegistration(pageIndex, pageSize)
+            const tableBody = document.getElementById('registrationTableBody');
+            const fragment = document.createDocumentFragment();
+
+            const loadingRow = document.createElement('tr');
+            loadingRow.innerHTML = '<td colspan="8">Загрузка...</td>';
+            fragment.appendChild(loadingRow);
+
+            tableBody.innerHTML = '';
+            tableBody.appendChild(fragment); 
+
+            fragment.innerHTML = ''; 
+            
+            for (const reg of registration) {
+                const row = document.createElement('tr');
+                row.classList.add('data-row');
+                row.dataset.id = reg.id;
+                fragment.appendChild(row);
+                
+                const sportsmanDataPromise = getSportsmanData(reg.sportsmanId);
+                const sportCategoryDataPromise = getSportCategoryData(reg.sportCategoryId);
+                const [sportsmanData, sportCategoryData] = await Promise.all([sportsmanDataPromise, sportCategoryDataPromise]);
+                row.innerHTML = `
+                                                <td>${sportsmanData.lastName}</td>
+                                                <td>${sportsmanData.firstName}</td>
+                                                <td>${sportsmanData.patronymic}</td>
+                                                <td>${sportsmanData.clubName}</td>
+                                                <td>${sportCategoryData.sex}</td>
+                                                <td>${sportCategoryData.dateOfBirth}</td>
+                                                <td>${sportCategoryData.weightValue} кг.</td>
+                                                <td>${reg.date}</td>
+                                            `;
+                row.addEventListener('click', handleRowClick);
+            }
+            tableBody.innerHTML = '';
+            tableBody.appendChild(fragment);
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await getAuthenticatedUser();
+                const urlParams = new URLSearchParams(window.location.search);
+                tournamentId = urlParams.get('id');
+                const tournamentName = urlParams.get('name');
+                const tournamentDate = urlParams.get('date');
+
+                const response1 = await fetch(`api/Tournaments/Tournament/${tournamentId}`);
+                if (!response1.ok) {
+                    throw new Error('Ошибка при выполнении запроса');
+                }
+                const tournament = await response1.json();
+                const registrationStatus = tournament.registrationStatus;
+                if(registrationStatus === 1){
+                    const endRegistrationButton = document.querySelector('.red-button');
+                    endRegistrationButton.style.display = 'none';
+                    const weighingButton = document.querySelector('.green-button');
+                    weighingButton.style.display = 'block';
+                }
+                
+                document.getElementById('tournamentName').textContent = tournamentName;
+                document.getElementById('tournamentDate').textContent = tournamentDate;
+
+                const response2 = await fetch(`api/matches`);
+                if (!response2.ok) {
+                    throw new Error('Ошибка при выполнении запроса');
+                }
+                const matches = await response2.json();
+                const hasMatches = matches.some(match => match.tournamentId.toString() === tournamentId.toString());
+                console.log(hasMatches);
+                if (hasMatches) {
+                    const url = new URL('tournament_matches_table.html', window.location.href);
+                    url.searchParams.set('id', tournamentId);
+                    window.location.href = url.href;
+                } else {
+                    displayRegistration(currentPageIndex, pageSize);
+                }
+            }
+            catch (error) {
+                console.log('Ошибка при выполнении скрипта:', error);
+
+            }
+        });
+
+        function handleRowClick(event) {
+            const registrationRow = event.target.closest('.data-row');
+
+            const popup = document.createElement('div');
+            popup.className = 'popup';
+
+            const buttons = document.createElement('div');
+            buttons.className = 'popup-buttons';
+
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Удалить';
+            deleteButton.className = 'red-button';
+            deleteButton.addEventListener('click', function () {handleDeleteButtonClick(event, registrationRow);});
+
+            const cancelButton = document.createElement('button');
+            cancelButton.textContent = 'Отмена';
+            cancelButton.className = 'blue-button';
+            cancelButton.addEventListener('click', handleCancelButtonClick);
+            
+            buttons.appendChild(deleteButton);
+            buttons.appendChild(cancelButton);
+            popup.appendChild(buttons);
+
+            popup.style.position = 'fixed';
+            popup.style.top = '50%';
+            popup.style.left = '50%';
+            popup.style.transform = 'translate(-50%, -50%)';
+            popup.classList.add('active');
+            const overlay = document.querySelector('.overlay');
+            overlay.classList.add('active');
+            
+            document.body.appendChild(popup);
+        }
+
+        function handleDeleteButtonClick(event, registrationRow) {
+            if (registrationRow) {
+                const registrationId = registrationRow.dataset.id;
+                deleteRegistration(registrationId)
+                    .then(() => {
+                        alert('Спортсмен успешно удален из списка регистрации!');
+                        const popup = document.querySelector('.popup');
+                        const overlay = document.querySelector('.overlay');
+                        popup.remove();
+                        overlay.classList.remove('active');
+                        registrationRow.remove();
+                    })
+                    .catch(error => {
+                        console.error('Ошибка при удалении спортсмена:', error);
+                    });
+            }
+            event.stopPropagation();
+        }
+
+        async function deleteRegistration(registrationId) {
+            try {
+                const response = await fetch(`/api/Registration/DeleteRegistration/${registrationId}`, {
+                    method: 'DELETE'
+                });
+                if (!response.ok) {
+                    throw new Error('Ошибка при выполнении запроса');
+                }
+            } catch (error) {
+                throw new Error('Ошибка при удалении спортсмена: ' + error.message);
+            }
+        }
+
+        function handleCancelButtonClick(event) {
+            const popup = document.querySelector('.popup');
+            const overlay = document.querySelector('.overlay');
+            popup.remove();
+            overlay.classList.remove('active');
+            event.stopPropagation();
+        }
+        
+        async function endRegistration() {
+            try {
+                const response = await fetch(`api/Tournaments/ChangeRegistrationStatus/${tournamentId}`, {
+                    method: 'PUT',
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(tournamentId)
+                });
+                if (!response.ok) {
+                    throw new Error('Ошибка при выполнении запроса');
+                }
+                alert('Регистрация закрыта!');
+                const endRegistrationButton = document.querySelector('.red-button');
+                endRegistrationButton.style.display = 'none';
+                const weighingButton = document.querySelector('.green-button');
+                weighingButton.style.display = 'block';
+            } catch (error) {
+                console.error('Произошла ошибка:', error);
+            }
+        }
+        
+        async function goToWeighing() {
+            const url = new URL('tournament_weighing_table.html', window.location.href);
+            url.searchParams.set('id', tournamentId);
+            window.location.href = url.href;
+        }
+    </script>
+</body>
+</html>

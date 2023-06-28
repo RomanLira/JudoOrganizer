@@ -1,0 +1,231 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Изменить тренера</title>
+    <link rel="stylesheet" type="text/css" href="css/authStyle.css" />
+</head>
+<body>
+    <header>
+        <h1 onclick="location.reload();">Judo Organizer</h1>
+    </header>
+    <nav>
+        <ul>
+            <li><a href="index_coach.html">Главная</a></li>
+            <li><a href="club_info.html">Клуб</a></li>
+            <li><a href="tournaments_table_for_coach.html">Турниры</a></li>
+            <li><a href="change_coach_info.html">Профиль</a></li>
+            <li><a href="contacts.html">Контакты</a></li>
+        </ul>
+    </nav>
+    <div class="container">
+        <div class="form-group">
+            <h2>Информация о тренере</h2>
+            <div class="form-group">
+                <input type="hidden" id="Id" />
+            </div>
+            <div class="form-group">
+                <label for="lastName">Фамилия:</label>
+                <input type="text" id="lastName" placeholder="Фамилия" required>
+            </div>
+            <div class="form-group">
+                <label for="firstName">Имя:</label>
+                <input type="text" id="firstName" placeholder="Имя" required>
+            </div>
+            <div class="form-group">
+                <label for="patronymic">Отчество:</label>
+                <input type="text" id="patronymic" placeholder="Отчество">
+            </div>
+            <div class="form-group">
+                <label for="phone">Номер телефона:</label>
+                <input type="text" id="phone" placeholder="Номер телефона" required>
+            </div>
+            <div class="form-group">
+                <label for="club">Клуб:</label>
+                <select id="club" name="club" required>
+                    <option value="" disabled selected>Выберите клуб</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <button onclick="sendPutRequest()">Подтвердить</button>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <p>&copy; 2023 МОУ ДО "СДЮШОР борьбы и бокса" г. Тирасполь. Все права защищены.</p>
+    </footer>
+    <script>
+        let userId;
+        let clubId;
+        let coachId;
+        async function getAuthenticatedUser() {
+            try {
+                const response = await fetch('/api/Users/IsAuthenticated')
+                if (!response.ok) {
+                    throw new Error('Ошибка при проверке аутентификации пользователя');
+                }
+
+                const roleResponse = await fetch('/api/Users/GetCurrentUserRole');
+                if (!roleResponse.ok) {
+                    throw new Error('Ошибка при получении роли пользователя');
+                }
+
+                const roleData = await roleResponse.json();
+                const role = roleData.role;
+
+                if (role !== 'Coach') {
+                    window.location.href = 'unauthorized.html';
+                }
+
+                const idResponse = await fetch('/api/Users/GetCurrentUserId');
+                if (!idResponse.ok) {
+                    throw new Error('Ошибка при получении id пользователя');
+                }
+
+                const idData = await idResponse.json();
+                userId = idData.id;
+            }
+            catch (error) {
+                console.log('Ошибка при получении информации об аутентификации пользователя:', error);
+                window.location.href = 'unauthorized.html';
+            }
+        }
+
+        async function getCoachByUserId(userId) {
+            try {
+                const response = await fetch(`/api/coaches/coachbyuserid/${userId}`);
+                if (!response.ok) {
+                    throw new Error('Ошибка при получении информации о тренере');
+                }
+                const coachData = await response.json();
+                return coachData;
+            } catch (error) {
+                console.log('Ошибка при получении информации о тренере:', error);
+                return null;
+            }
+        }
+
+        async function getAllClubs() {
+            try {
+                const response = await fetch('/api/clubs');
+                if (!response.ok) {
+                    throw new Error('Ошибка при получении списка клубов');
+                }
+                const clubsData = await response.json();
+                return clubsData;
+            } catch (error) {
+                console.log('Ошибка при получении списка клубов:', error);
+                return [];
+            }
+        }
+
+        async function getClubData(clubId) {
+            try {
+                const response = await fetch(`/api/clubs/club/${clubId}`);
+                if (!response.ok) {
+                    throw new Error('Ошибка при получении информации о клубе');
+                }
+                const club = await response.json();
+                const clubSelect = document.getElementById('club');
+                clubSelect.innerHTML = `<option value="${club.id}" selected>${club.name}</option>`;
+            } catch (error) {
+                console.log('Ошибка при получении информации о клубе:', error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await getAuthenticatedUser();
+                const coach = await getCoachByUserId(userId);
+                if (coach) {
+                    coachId = coach.id;
+                    clubId = coach.clubId;
+                    document.getElementById("lastName").value = coach.lastName;
+                    document.getElementById("firstName").value = coach.firstName;
+                    document.getElementById("patronymic").value = coach.patronymic;
+                    document.getElementById("phone").value = coach.phone;
+                    await getClubData(clubId);
+
+                    const clubs = await getAllClubs();
+                    const clubSelect = document.getElementById('club');
+                    clubSelect.innerHTML = '';
+                    clubs.forEach((club) => {
+                        const option = document.createElement('option');
+                        option.value = club.id;
+                        option.textContent = club.name;
+                        if (club.id === clubId) {
+                            option.selected = true;
+                        }
+                        clubSelect.appendChild(option);
+                    });
+                } else {
+                    console.log('Тренер не найден');
+                }
+            }
+            catch (error) {
+                console.log('Ошибка при выполнении скрипта:', error);
+
+            }
+        });
+
+        const uri = 'api/coaches';
+        async function putData(url = '', data = {}) {
+            try {
+                const response = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    throw new Error("Ошибка при обновлении данных!");
+                }
+                console.log("Данные обновлены!");
+                window.location.href = 'change_coach_info.html';
+
+            } catch (error) {
+                console.log('Произошла ошибка:', error);
+                alert('Произошла ошибка! ' + error + ' Попробуйте ещё раз.');
+            }
+            reset();
+        }
+
+        function sendPutRequest() {
+            const lastName = document.getElementById("lastName").value;
+            const firstName = document.getElementById("firstName").value;
+            const patronymic = document.getElementById('patronymic').value;
+            const phone = document.getElementById('phone').value;
+            const club = document.getElementById('club').value;
+            const textRegex = /^[A-Za-zА-Яа-яЁё\s]*$/;
+            const phoneRegex = /^[\d\s()-]*$/;
+            if (!lastName || !firstName || !phone || !club) {
+                alert('Заполните все поля!');
+                return;
+            }
+            if (!textRegex.test(lastName) || !textRegex.test(firstName) || !textRegex.test(patronymic)) {
+                alert("Недопустимый формат текстового ввода!");
+                return;
+            }
+            if (!phoneRegex.test(phone)) {
+                alert("Недопустимый формат номера телефона!");
+                return;
+            }
+            const coach =
+            {
+                "id": coachId,
+                "lastName": lastName,
+                "firstName": firstName,
+                "patronymic": patronymic,
+                "phone": phone,
+                "clubId": parseInt(club),
+                "userId": userId
+
+            };
+            putData(uri, coach);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Вход</title>
+    <link rel="stylesheet" type="text/css" href="css/authStyle.css" />
+    <script src="js/axios.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1 onclick="location.reload();">Judo Organizer</h1>
+    </header>
+
+    <div class="container">
+        <div class="form-group">
+            <h2>Авторизация</h2>
+            <div class="form-group">
+                <label for="login">Логин:</label>
+                <input type="text" id="login" placeholder="Введите логин" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Пароль:</label>
+                <input type="password" id="password" placeholder="Введите пароль" required>
+            </div>
+            <div class="form-group">
+                <button id="enter" onclick="login()">Войти</button>
+                <div id="loadingIndicator" style="display: none;">Идет авторизация...</div>
+            </div>
+        </div>
+        <p class="registration">Зарегистрируйтесь <a href="registration.html">здесь</a></p>
+    </div>
+    <footer>
+        <p>&copy; 2023 МОУ ДО "СДЮШОР борьбы и бокса" г. Тирасполь. Все права защищены.</p>
+    </footer>
+    <script>
+        function showLoadingIndicator() {
+            document.getElementById("loadingIndicator").style.display = "block";
+            document.getElementById("login").disabled = true;
+            document.getElementById("password").disabled = true;
+            document.getElementById("enter").disabled = true;
+        }
+
+        function hideLoadingIndicator() {
+            document.getElementById("loadingIndicator").style.display = "none";
+            document.getElementById("login").disabled = false;
+            document.getElementById("password").disabled = false;
+            document.getElementById("enter").disabled = false;
+        }
+        
+        function login() {
+            var login = document.getElementById("login").value;
+            var password = document.getElementById("password").value;
+            if (!login || !password) {
+                alert('Заполните все поля!');
+                return;
+            }
+            showLoadingIndicator();
+            axios.post('/api/Users/Login?cache=' + Date.now(),
+                {
+                    login: login,
+                    password: password
+                })
+                .then(function (response) {
+                    var role = response.data.role;
+
+                    if (role == "0") {
+                        window.location.href = '/index.html';
+                    } else if (role == "1") {
+                        window.location.href = '/index_coach.html';
+                    } else {
+                        alert('Неправильные учетные данные ' + role);
+                    }
+                })
+                .catch(function (error) {
+                    console.error(error);
+                    alert('Ошибка при авторизации');
+                })
+                .finally(function () {
+                    hideLoadingIndicator();
+                });
+        }
+
+        function reset() {
+            document.getElementById("login").value =
+                document.getElementById("password").value = "";
+        }
+    </script>
+</body>
+</html>

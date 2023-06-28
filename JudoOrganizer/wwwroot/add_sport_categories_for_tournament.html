@@ -1,0 +1,165 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Создание весовых категорий</title>
+    <link rel="stylesheet" type="text/css" href="css/authStyle.css" />
+</head>
+<body>
+    <header>
+        <h1 onclick="location.reload();">Judo Organizer</h1>
+    </header>
+
+    <div class="container">
+        <div class="form-group">
+        <h2>Категории</h2>
+        <div class="form-group">
+            <label for="sex">Пол:</label>
+            <select id="sex" name="sex" required>
+                <option value="" disabled selected>Выберите пол</option>
+                <option value="Мужской">Мужской</option>
+                <option value="Женский">Женский</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="dateOfBirth">Год рождения:</label>
+            <input type="number" id="dateOfBirth" name="dateOfBirth" placeholder="Год рождения" required>
+        </div>
+        <div class="form-group">
+            <label for="weight">Вес:</label>
+            <select id="weight" name="weight" required>
+                <option value="" disabled selected>Выберите вес</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <button id="addCategoryButton" onclick="sendPostRequest()">Добавить категорию</button>
+        </div>
+        <div class="form-group">
+            <button onclick="redirect()">Сохранить</button>
+        </div>
+    </div>
+    </div>
+    <footer>
+        <p>&copy; 2023 МОУ ДО "СДЮШОР борьбы и бокса" г. Тирасполь. Все права защищены.</p>
+    </footer>
+    <script>
+        let tournamentId;
+        async function getAuthenticatedUser() {
+            try {
+                const response = await fetch('/api/Users/IsAuthenticated')
+                if (!response.ok) {
+                    throw new Error('Ошибка при проверке аутентификации пользователя');
+                }
+
+                const roleResponse = await fetch('/api/Users/GetCurrentUserRole');
+                if (!roleResponse.ok) {
+                    throw new Error('Ошибка при получении роли пользователя');
+                }
+
+                const roleData = await roleResponse.json();
+                const role = roleData.role;
+
+                if (role !== 'Admin') {
+                    window.location.href = 'unauthorized.html';
+                }
+            }
+            catch (error) {
+                console.log('Ошибка при получении информации об аутентификации пользователя:', error);
+                window.location.href = 'unauthorized.html';
+            }
+        }
+
+
+        async function getWeights(weightSelect) {
+            try {
+                const response = await fetch('/api/weights')
+                if (!response.ok) {
+                    throw new Error('Ошибка при получении списка весов');
+                }
+
+                const weights = await response.json();
+                weightSelect.innerHTML = '';
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.disabled = true;
+                defaultOption.selected = true;
+                defaultOption.textContent = 'Выберите вес';
+                weightSelect.appendChild(defaultOption);
+                weights.forEach(weight => {
+                    const option = document.createElement('option');
+                    option.value = weight.id;
+                    option.text = weight.weightValue;
+                    weightSelect.appendChild(option);
+                });
+            }
+            catch (error) {
+                console.log('Ошибка при получении списка весов:', error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            getAuthenticatedUser();
+            const weightSelect = document.querySelector('select[name="weight"]');
+            getWeights(weightSelect);
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            tournamentId = urlParams.get('id');
+        });
+
+        const uri = 'api/sportcategories';
+        const postData = async (url = '', data = {}) => {
+            try {
+                response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const errorMessage = await response.text();
+                    alert('Ошибка: ' + errorMessage);
+                }
+                else {
+                    const result = await response.json();
+                    console.log(result);
+                    alert('Категория успешно добавлена!');
+                }
+            } catch (error) {
+                alert('Произошла ошибка! ' + error + ' Попробуйте ещё раз.');
+            }
+        };
+
+        function sendPostRequest() {
+            const sex = document.getElementById("sex").value;
+            const dateOfBirth = document.getElementById("dateOfBirth").value;
+            const weight = document.getElementById('weight').value;
+            if (!sex || !dateOfBirth || !weight) {
+                alert('Заполните все поля!');
+                return;
+            }
+
+            const dateOfBirthRegex = /^(19|20)\d{2}$/;
+            if (!dateOfBirthRegex.test(dateOfBirth)) {
+                alert("Неправильный формат даты!");
+                return;
+            }
+
+            const sportCategory =
+            {
+                "sex": sex,
+                "dateOfBirth": dateOfBirth,
+                "weightId": parseInt(weight),
+                "tournamentId": tournamentId
+            };
+            postData(uri, sportCategory);
+        }
+
+        function redirect() {
+            window.location.href = 'tournaments_table.html';
+        }
+    </script>
+</body>
+</html>

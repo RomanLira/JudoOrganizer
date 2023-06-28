@@ -1,0 +1,208 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Регистрация на турнир</title>
+    <link rel="stylesheet" type="text/css" href="css/authStyle.css" />
+</head>
+<body>
+    <header>
+        <h1 onclick="location.reload();">Judo Organizer</h1>
+    </header>
+    <nav>
+        <ul>
+            <li><a href="index_coach.html">Главная</a></li>
+            <li><a href="club_info.html">Клуб</a></li>
+            <li><a href="tournaments_table_for_coach.html">Турниры</a></li>
+            <li><a href="change_coach_info.html">Профиль</a></li>
+            <li><a href="contacts.html">Контакты</a></li>
+        </ul>
+    </nav>
+    <div class="container">
+        <div class="form-group">
+            <h2 id="tournamentName"></h2>
+            <h2 id="tournamentDate"></h2>
+            <div class="form-group">
+                <label for="sportsman">Спортсмен:</label>
+                <select id="sportsman" name="sportsman" required onchange="getCategoriesForSportsman()">
+                    <option value="" disabled selected>Выберите спортсмена</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="category">Категория:</label>
+                <select id="category" name="category" required>
+                    <option value="" disabled selected>Выберите категорию</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <button onclick="sendPostRequest()">Подтвердить</button>
+            </div>
+            <div class="form-group">
+                <button onclick="end()">Завершить регистрацию</button>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <p>&copy; 2023 МОУ ДО "СДЮШОР борьбы и бокса" г. Тирасполь. Все права защищены.</p>
+    </footer>
+    <script>
+        let coachId;
+        let clubId;
+        let tournamentId;
+        async function getAuthenticatedUser() {
+            try {
+                const response = await fetch('/api/Users/IsAuthenticated')
+                if (!response.ok) {
+                    throw new Error('Ошибка при проверке аутентификации пользователя');
+                }
+
+                const roleResponse = await fetch('/api/Users/GetCurrentUserRole');
+                if (!roleResponse.ok) {
+                    throw new Error('Ошибка при получении роли пользователя');
+                }
+
+                const roleData = await roleResponse.json();
+                const role = roleData.role;
+
+                if (role !== 'Coach') {
+                    window.location.href = 'unauthorized.html';
+                }
+            } catch (error) {
+                console.log('Ошибка при получении информации об аутентификации пользователя:', error);
+                window.location.href = 'unauthorized.html';
+            }
+        }
+
+        const uri = 'api/registration';
+        async function postData(url = '', data = {}) {
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const errorMessage = await response.text();
+                    throw new Error(errorMessage);
+                }
+                const result = await response.json();
+                console.log(result);
+                alert('Спортсмен зарегистрирован!');
+
+            } catch (error) {
+                console.log('Произошла ошибка:', error);
+                alert('Произошла ошибка! ' + error + ' Попробуйте ещё раз.');
+            }
+        }
+
+        function sendPostRequest() {
+            const sportsmanId = document.getElementById("sportsman").value;
+            const categoryId = document.getElementById("category").value;
+            const currentDate = new Date();
+            const date = currentDate.toLocaleDateString() + ' ' + currentDate.toLocaleTimeString();
+            if (!sportsmanId || !categoryId) {
+                alert('Заполните все поля!');
+                return;
+            }
+            const registration =
+            {
+                "date": date,
+                "tournamentId": tournamentId,
+                "sportsmanId": parseInt(sportsmanId),
+                "sportCategoryId": parseInt(categoryId)
+
+            };
+            postData(uri, registration);
+        }
+
+        function end() {
+            window.location.href = 'tournaments_table_for_coach.html';
+        }
+
+        async function getAllSportsmen() {
+            try {
+                const response = await fetch(`/api/coaches/coach/${coachId}/sportsmen`);
+                if (!response.ok) {
+                    throw new Error('Ошибка при получении списка городов');
+                }
+                const sportsmen = await response.json();
+                return sportsmen;
+            } catch (error) {
+                console.log('Ошибка при получении списка городов:', error);
+                return [];
+            }
+        }
+
+        async function getCategoriesForSportsman() {
+            try {
+                const sportsmanId = document.getElementById('sportsman').value;
+                const categorySelect = document.getElementById('category');
+                categorySelect.innerHTML = '<option value="" disabled selected>Выберите категорию</option>'; 
+
+                const response = await fetch(`/api/sportsmen/sportsman/${sportsmanId}/sportcategories`)
+                if (!response.ok) {
+                    throw new Error('Ошибка при получении списка категорий');
+                }
+                const categories = await response.json();
+                for (category of categories) {
+                    const response = await fetch(`/api/weights/weight/${category.weightId}`);
+                    if (!response.ok) {
+                        throw new Error('Ошибка при получении веса');
+                    }
+                    if(category.tournamentId.toString() === tournamentId.toString()) {
+                        const weight = await response.json();
+                        const weightValue = weight.weightValue;
+                        const option = document.createElement('option');
+                        option.value = category.id;
+                        option.text = category.sex + "; " + category.dateOfBirth + " г. р.; " + weightValue + " кг.";
+                        categorySelect.appendChild(option);
+                    }
+                }
+            }
+            catch (error) {
+                console.log('Ошибка при получении списка категорий:', error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await getAuthenticatedUser();
+                const urlParams = new URLSearchParams(window.location.search);
+                coachId = urlParams.get('coachId');
+                clubId = urlParams.get('clubId');
+                tournamentId = urlParams.get('tournamentId');
+                const name = urlParams.get('name');
+                const date = urlParams.get('date');
+
+                document.getElementById('tournamentName').textContent = name;
+                document.getElementById('tournamentDate').textContent = date;
+
+                const sportsmen = await getAllSportsmen();
+                const sportsmanSelect = document.getElementById('sportsman');
+                sportsmanSelect.innerHTML = '';
+
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.disabled = true;
+                defaultOption.selected = true;
+                defaultOption.textContent = 'Выберите спортсмена';
+                sportsmanSelect.appendChild(defaultOption);
+
+                sportsmen.forEach((sportsman) => {
+                    const option = document.createElement('option');
+                    option.value = sportsman.id;
+                    option.textContent = sportsman.lastName + " " + sportsman.firstName + " " + sportsman.patronymic;
+                    sportsmanSelect.appendChild(option);
+                });
+            }
+            catch (error) {
+                console.log('Ошибка при выполнении скрипта:', error);
+            }
+        });
+    </script>
+</body>
+</html>
